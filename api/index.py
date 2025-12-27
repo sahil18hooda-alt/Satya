@@ -13,7 +13,14 @@ from pydantic import BaseModel
 from typing import List, Optional
 import google.generativeai as genai
 from dotenv import load_dotenv
-from .deepfake_detection import DeepfakeDetector
+try:
+    from .deepfake_detection import DeepfakeDetector
+except ImportError:
+    try:
+        from deepfake_detection import DeepfakeDetector
+    except ImportError:
+        print("CRITICAL: DeepfakeDetector Module NOT FOUND. Deepfake features will fail.")
+        DeepfakeDetector = None
 import shutil
 
 load_dotenv() # Load environment variables from .env file
@@ -115,10 +122,11 @@ chat_model = genai.GenerativeModel(
 
 # Initialize Deepfake Detector (Lazy load to save startup time if needed, but here we do eager)
 deepfake_detector = None
-try:
-    deepfake_detector = DeepfakeDetector()
-except Exception as e:
-    print(f"Failed to load DeepfakeDetector: {e}")
+if DeepfakeDetector:
+    try:
+        deepfake_detector = DeepfakeDetector()
+    except Exception as e:
+        print(f"Failed to load DeepfakeDetector: {e}")
 
 @app.get("/api")
 def read_root():
