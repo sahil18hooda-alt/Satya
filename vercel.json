@@ -1,7 +1,23 @@
 {
     "rewrites": [
         {
-            "source": "/api/:path*",
+            "source": "/analyze",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/chat-audio",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/detect-deepfake",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/chat-constitutional",
+            "destination": "/api/index.py"
+        },
+        {
+            "source": "/api/(.*)",
             "destination": "/api/index.py"
         }
     ]
