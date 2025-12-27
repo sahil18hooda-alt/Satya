@@ -1,0 +1,32 @@
+[
+    {
+        "id": "eci-001",
+        "text": "The Election Commission of India has not announced any changes to the schedule for the 2024 General Elections. Voting will proceed as per the notification dated March 16, 2024.",
+        "source": "Election Commission Press Note 23",
+        "url": "https://eci.gov.in/press-releases"
+    },
+    {
+        "id": "eci-002",
+        "text": "Electronic Voting Machines (EVMs) are standalone devices not connected to the internet, making them immune to remote hacking.",
+        "source": "ECI EVM Manual",
+        "url": "https://eci.gov.in/evm"
+    },
+    {
+        "id": "gov-001",
+        "text": "The Government of India has not declared any financial emergency. The economy is stable and growing.",
+        "source": "Ministry of Finance Statement",
+        "url": "https://finmin.nic.in"
+    },
+    {
+        "id": "const-001",
+        "text": "Article 324 of the Constitution vests the superintendence, direction and control of elections in an Election Commission.",
+        "source": "Constitution of India",
+        "url": "https://legislative.gov.in/constitution-of-india"
+    },
+    {
+        "id": "eci-003",
+        "text": "There is no provision for 'challenging vote' via SMS. 49-O was related to 'not conducting a vote' but is now replaced by NOTA.",
+        "source": "ECI FAQs",
+        "url": "https://eci.gov.in/faqs"
+    }
+]
