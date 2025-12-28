@@ -440,6 +440,14 @@ function DeepfakeUploader() {
         </button>
       )}
 
+      {/* Extension Link */}
+      <div className="mt-8 text-center pt-6 border-t font-medium text-slate-600">
+        Want to protect yourself on YouTube? <br />
+        <a href="/deepfake-extension.zip" download className="text-blue-600 hover:underline font-bold inline-flex items-center gap-1 mt-2">
+          Download YouTube Detective Extension ↗
+        </a>
+      </div>
+
       {loading && (
         <div className="mt-8 text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
