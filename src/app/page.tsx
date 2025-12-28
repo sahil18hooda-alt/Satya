@@ -163,7 +163,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center pb-20 bg-gray-50 dark:bg-background transition-colors">
+    <main className="min-h-screen flex flex-col items-center pb-20 bg-white dark:bg-background transition-colors">
       <section className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-6">
 
         {/* Header Section */}
@@ -171,8 +171,8 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-200">
             <ShieldCheck className="w-3 h-3" /> Official Election Fact-Checker
           </div>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">
-            Don't Forward without <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-600">Checking.</span>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">
+            Don't Forward without <br /><span className="text-white bg-black px-2 py-1 rounded-md">Checking.</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
             Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.
