@@ -14,3 +14,4 @@ numpy
 pillow
 python-multipart
 torchvision
+yt-dlp

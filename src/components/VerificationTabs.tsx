@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Image as ImageIcon, Link as LinkIcon, Lock, Loader2, UploadCloud } from "lucide-react";
+import { Copy, Image as ImageIcon, Link as LinkIcon, Lock, Loader2, UploadCloud, FileText } from "lucide-react";
 
 interface VerificationTabsProps {
     onVerify: (type: 'text' | 'image' | 'url', content: string | File) => void;
@@ -39,7 +39,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
         }
     };
 
-    const handleSubmit = () => {
+    const handleVerify = () => {
         if (activeTab === 'text' && textInput.trim()) {
             onVerify('text', textInput);
         } else if (activeTab === 'image' && fileInput) {
@@ -50,32 +50,40 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
     };
 
     return (
-        <div className="bg-white border rounded-3xl p-6 shadow-sm">
-            {/* Tabs */}
-            <div className="flex border-b mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-100">
                 <button
                     onClick={() => setActiveTab('text')}
-                    className={`flex-1 flex items-center justify-center gap-2 pb-4 text-sm font-semibold transition-all border-b-2 ${activeTab === 'text' ? 'text-blue-900 border-blue-900' : 'text-muted-foreground border-transparent hover:text-foreground'
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all relative ${activeTab === 'text'
+                        ? 'text-[#13316c]'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
-                    <span className="text-lg">Tt</span> Text
+                    <FileText className="w-4 h-4" /> Text
+                    {activeTab === 'text' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
                 </button>
                 <button
                     onClick={() => setActiveTab('image')}
-                    className={`flex-1 flex items-center justify-center gap-2 pb-4 text-sm font-semibold transition-all border-b-2 ${activeTab === 'image' ? 'text-blue-900 border-blue-900' : 'text-muted-foreground border-transparent hover:text-foreground'
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all relative ${activeTab === 'image'
+                        ? 'text-[#13316c]'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
                     <ImageIcon className="w-4 h-4" /> Image/Screenshot
+                    {activeTab === 'image' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
                 </button>
                 <button
                     onClick={() => setActiveTab('url')}
-                    className={`flex-1 flex items-center justify-center gap-2 pb-4 text-sm font-semibold transition-all border-b-2 ${activeTab === 'url' ? 'text-blue-900 border-blue-900' : 'text-muted-foreground border-transparent hover:text-foreground'
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all relative ${activeTab === 'url'
+                        ? 'text-[#13316c]'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
                     <LinkIcon className="w-4 h-4" /> URL
+                    {activeTab === 'url' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
                 </button>
             </div>
-
             {/* Content Area */}
             <div className="min-h-[200px] relative">
                 <AnimatePresence mode="wait">
@@ -173,7 +181,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                 </div>
 
                 <button
-                    onClick={handleSubmit}
+                    onClick={handleVerify}
                     disabled={isAnalyzing || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
                     className="bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
                 >

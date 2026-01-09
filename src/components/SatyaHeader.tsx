@@ -1,45 +1,50 @@
-import React from 'react';
-import Image from 'next/image';
+"use client";
+
+import { ShieldCheck, Menu } from "lucide-react";
+import { LanguageSelector } from "./LanguageSelector";
+import Link from "next/link";
 
 export function SatyaHeader() {
     return (
-        <header className="w-full bg-white shadow-md border-b-4 border-b-orange-500 relative z-50">
-            {/* Tricolor Strip Top */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-white to-green-600" />
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-100/80 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-
-                {/* Left: Govt Identity */}
+                {/* Logo Section */}
                 <div className="flex items-center gap-3">
-                    {/* Emblem Image */}
-                    <div className="flex flex-col items-center justify-center text-center">
-                        <div className="w-12 h-16 relative flex items-center justify-center">
-                            <Image
-                                src="/emblem.png"
-                                alt="National Emblem of India"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="text-[#13316c]">
+                            <ShieldCheck className="w-8 h-8" strokeWidth={2.5} />
                         </div>
-                    </div>
+                        <div className="flex flex-col leading-none">
+                            <span className="font-mukta font-bold text-2xl text-[#1f242e] tracking-tight group-hover:text-[#13316c] transition-colors">
+                                सत्य Verify
+                            </span>
+                        </div>
+                    </Link>
+                </div>
 
-                    <div className="h-10 w-[1px] bg-gray-300 mx-2 hidden sm:block"></div>
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center gap-8">
+                    <nav className="flex items-center gap-6 text-sm font-medium text-gray-600">
+                        <Link href="#" className="hover:text-[#13316c] transition-colors">About</Link>
+                        <Link href="#" className="hover:text-[#13316c] transition-colors">Guidelines</Link>
+                        <Link href="#" className="hover:text-[#13316c] transition-colors">Contact</Link>
+                    </nav>
 
-                    <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Government of India</span>
-                        <span className="text-[0.65rem] font-semibold text-gray-400">Initiative for Digital Integrity</span>
+                    <div className="flex items-center gap-4">
+                        <LanguageSelector />
+                        <button className="px-5 py-2 text-sm font-bold text-[#13316c] border-2 border-[#13316c] rounded-full hover:bg-[#13316c] hover:text-white transition-all">
+                            Official Login
+                        </button>
                     </div>
                 </div>
 
-                {/* Center/Right: S.A.T.Y.A Branding */}
-                <div className="text-right">
-                    <h1 className="text-2xl md:text-3xl font-black text-[#1d2d50] tracking-tight leading-none">
-                        S.A.T.Y.A. <span className="text-orange-600 text-lg md:text-xl font-serif">(सत्य)</span>
-                    </h1>
-                    <p className="text-[0.6rem] md:text-xs font-bold text-orange-700 tracking-wider uppercase mt-1">
-                        System for Authentic Tracking & Youth Awareness
-                    </p>
+                {/* Mobile Menu Toggle */}
+                <div className="md:hidden flex items-center gap-3">
+                    <LanguageSelector />
+                    <button className="p-2 text-gray-600">
+                        <Menu className="w-6 h-6" />
+                    </button>
                 </div>
 
             </div>

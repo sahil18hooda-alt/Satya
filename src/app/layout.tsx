@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans, Mukta } from "next/font/google"; // Import standard Google Fonts
 import "./globals.css";
 import { SatyaHeader } from "@/components/SatyaHeader";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSans = Noto_Sans({
   subsets: ["latin"],
+  variable: "--font-noto-sans",
+  weight: ["300", "400", "500", "600", "700", "800"], // Comprehensive weights
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const mukta = Mukta({
+  subsets: ["latin", "devanagari"],
+  variable: "--font-mukta",
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "S.A.T.Y.A. (सत्य) | Authentic Tracking & Youth Awareness",
-  description: "Official Platform for Election Integrity and Democratic Awareness",
+  title: "Satya Verify - Government Fact Check Portal",
+  description: "Official portal to verify news and combat misinformation.",
 };
 
 export default function RootLayout({
@@ -25,13 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
-      >
-        <SatyaHeader />
-        <main className="min-h-screen">
+      <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased bg-[#fbfaf9]`}>
+        <LanguageProvider>
+          <SatyaHeader />
           {children}
-        </main>
+        </LanguageProvider>
       </body>
     </html>
   );

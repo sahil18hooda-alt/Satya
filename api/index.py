@@ -302,8 +302,9 @@ constitutional_model = genai.GenerativeModel(
     2. NEUTRALITY: Do NOT use emotive adjectives (e.g., 'revolutionary', 'dangerous', 'historic'). Use neutral verbs (e.g., 'proposes', 'stipulates', 'argues').
     3. CITATIONS: Every claim must be tied to a source. Ideally cite the 'Kovind Committee Report', 'Constitution of India' (Arts 83, 172, 325), or 'ECI Reports'.
     4. LANGUAGE: You MUST support ALL 22 Scheduled Languages of India. 
-       - ALWAYS respond in the SAME LANGUAGE as the user's input query. 
-       - If the query is in Hindi, the entire JSON response (pro_argument, con_argument, neutral_summation) must be in Hindi.
+       - ALWAYS respond in the Target Language specified in the prompt. 
+       - If no target language is specified, detect the language of the query.
+       - If the target language is Hindi, the entire JSON response (pro_argument, con_argument, neutral_summation) must be in Hindi.
        - Citations can remain in English if they refer to English documents, but translated citations are preferred if standard.
 
     OUTPUT SCHEMA (JSON):
@@ -318,15 +319,44 @@ constitutional_model = genai.GenerativeModel(
 
 @app.post("/chat-constitutional", response_model=ConstitutionalResponse)
 async def chat_constitutional(request: ConstitutionalRequest):
-    print(f"Constitutional Query: {request.query}")
+    # Map codes to full names for better AI prompting
+    LANG_MAP = {
+        'en': 'English',
+        'hi': 'Hindi',
+        'bn': 'Bengali',
+        'te': 'Telugu',
+        'ta': 'Tamil',
+        'mr': 'Marathi',
+        'gu': 'Gujarati',
+        'kn': 'Kannada',
+        'ml': 'Malayalam',
+        'pa': 'Punjabi',
+        'or': 'Odia',
+        'as': 'Assamese'
+    }
+    target_lang = LANG_MAP.get(request.language, request.language)
+    
+    print(f"Constitutional Query: {request.query} (Lang Code: {request.language} -> {target_lang})")
+    
+    prompt = f"Analyze this topic: '{request.query}'."
+    if target_lang.lower() != "english":
+         prompt += f" Target Language: {target_lang}. Force output in {target_lang}."
+    else:
+         prompt += " Respond in the same language as the query."
+    
+    prompt += " Output strict JSON."
+
     try:
-        response = constitutional_model.generate_content(f"Analyze this topic: '{request.query}'. Language: {request.language}")
+        response = constitutional_model.generate_content(prompt)
         
         text = response.text.strip()
+        print(f"Raw AI Response: {text}")
         if text.startswith("```json"): text = text[7:-3]
         elif text.startswith("```"): text = text[3:-3]
         
         data = json.loads(text)
+        if isinstance(data, list):
+            data = data[0]
         return ConstitutionalResponse(
             pro_argument=data.get("pro_argument", ""),
             con_argument=data.get("con_argument", ""),
@@ -341,6 +371,139 @@ async def chat_constitutional(request: ConstitutionalRequest):
             neutral_summation="Please try again.",
             citations=[]
         )
+
+# --- Translation Logic (BharatGen) ---
+
+class TranslateRequest(BaseModel):
+    text: str
+    target_language: str
+
+class TranslateResponse(BaseModel):
+    translated_text: str
+
+translate_model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash",
+    generation_config={"response_mime_type": "application/json"},
+    system_instruction="""You are 'BharatGen', India's sovereign AI translator. 
+    Your task is to translate the given text into the target Indian language accurately, preserving nuance and context.
+    Return JSON: { "translated_text": "..." }
+    """
+)
+
+@app.post("/translate", response_model=TranslateResponse)
+async def translate_text(request: TranslateRequest):
+    try:
+        if request.target_language.lower() == "en" or request.target_language.lower() == "english":
+             return TranslateResponse(translated_text=request.text)
+
+        response = translate_model.generate_content(
+            f"Translate this text to {request.target_language}: '{request.text}'"
+        )
+        
+        text = response.text.strip()
+        if text.startswith("```json"): text = text[7:-3]
+        elif text.startswith("```"): text = text[3:-3]
+        
+        data = json.loads(text)
+        return TranslateResponse(translated_text=data.get("translated_text", request.text))
+
+    except Exception as e:
+        print(f"Translation Error: {e}")
+        return TranslateResponse(translated_text=request.text) 
+
+# --- News Endpoint (Crash Fix) ---
+
+class NewsRequest(BaseModel):
+    language: Optional[str] = "English"
+
+@app.post("/latest-news")
+async def get_latest_news(request: NewsRequest):
+    # Mock Data
+    news_items = [
+        {
+            "headline": "Election Commission Announces Dates for 2026 General Elections",
+            "summary": "The ECI has finalized the schedule for the upcoming general elections, spanning 7 phases starting from April 15th.",
+            "source": "ECI Official",
+            "date": "2 hours ago",
+            "category": "Official"
+        },
+        {
+            "headline": "Voter Turnout Expected to Cross 70% in Phase 1",
+            "summary": "Analysts predict a record-breaking turnout in the first phase of polling due to increased awareness campaigns.",
+            "source": "India Today",
+            "date": "4 hours ago",
+            "category": "Analysis"
+        },
+        {
+            "headline": "New Guidelines for Polling Booth Security Released",
+            "summary": "Strict measures including drone surveillance and webcasting will be implemented across all sensitive booths.",
+            "source": "PIB",
+            "date": "Yesterday",
+            "category": "Security"
+        },
+        {
+            "headline": "PM Addresses Mega Rally in Varanasi",
+            "summary": "The Prime Minister highlighted the government's achievements over the last term and promised further development.",
+            "source": "DD News",
+            "date": "Today",
+            "category": "Campaign"
+        },
+        {
+            "headline": "Supreme Court Hears Plea on EVM Verification",
+            "summary": "The apex court has agreed to hear a PIL seeking 100% VVPAT verification for the upcoming polls.",
+            "source": "Live Law",
+            "date": "Just Now",
+            "category": "Legal"
+        },
+         {
+            "headline": "Fact Check: Viral Video of Booth Capturing is Fake",
+            "summary": "A video circulating on WhatsApp claims to be recent but is actually from 2014. Authorities have clarified.",
+            "source": "Satya Verify",
+            "date": "1 hour ago",
+            "category": "Fact Check"
+        }
+    ]
+    
+    # If language is not English, we *could* translate here, but for now return English to fix crash
+    # Future: Use translate_model.generate_content to translate mock data
+    
+    return news_items
+
+# --- Deepfake Detective ---
+
+# Global Detector Instance
+detector = None
+try:
+    from api.deepfake_detection import DeepfakeDetector
+    detector = DeepfakeDetector() # Load models once
+except ImportError:
+    print("Deepfake Module not found. Feature disabled.")
+except Exception as e:
+    print(f"Deepfake Model Load Error: {e}")
+
+@app.post("/detect-deepfake")
+async def detect_deepfake(file: UploadFile = File(...)):
+    if not detector:
+        return JSONResponse({"error": "Deepfake module unavailable"}, status_code=500)
+    
+    # Save temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    
+    try:
+        # Run detection
+        result = detector.detect(tmp_path)
+        if "error" in result:
+             return JSONResponse(result, status_code=400)
+        return result
+    except Exception as e:
+        print(f"Detection Error: {e}")
+        return JSONResponse({"error": f"Analysis failed: {str(e)}"}, status_code=500)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path) 
+
 
 if __name__ == "__main__":
     import uvicorn

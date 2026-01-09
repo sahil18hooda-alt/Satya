@@ -18,6 +18,7 @@ try:
 except ImportError:
     from .deepfake_detection import DeepfakeDetector
 import shutil
+import yt_dlp
 
 load_dotenv() # Load environment variables from .env file
 
@@ -318,6 +319,8 @@ async def chat_constitutional(request: ConstitutionalRequest):
         elif text.startswith("```"): text = text[3:-3]
         
         data = json.loads(text)
+        if isinstance(data, list):
+            data = data[0]
         return ConstitutionalResponse(
             pro_argument=data.get("pro_argument", ""),
             con_argument=data.get("con_argument", ""),
@@ -379,14 +382,8 @@ async def analyze_image(file: UploadFile = File(...)):
         )
 
     except Exception as e:
-        print(f"Image Analysis Error: {e}")
-        return AnalyzeResponse(
-            isFake=False,
-            confidence=0.0,
-            originalText="[Error]",
-            explanation=Explanation(highlightedWords=[], reason="Error analyzing image."),
-            contextLinks=[]
-        )
+            print(f"YouTube Analysis Error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
     finally:
         if os.path.exists(tmp_path):
@@ -395,3 +392,86 @@ async def analyze_image(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+class NewsRequest(BaseModel):
+    language: str
+
+@app.post("/latest-news")
+async def latest_news(request: NewsRequest):
+    print(f"News Request: {request.language}")
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            generation_config={"response_mime_type": "application/json"},
+            system_instruction="""You are an unbiased news aggregator for Indian Elections.
+            Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
+            
+            OUTPUT SCHEMA (JSON):
+            [
+              {
+                "headline": "Headline in requested language",
+                "summary": "Short 2-sentence summary in requested language",
+                "date": "Today's Date",
+                "source": "Source Name (e.g. DD News, ECI)",
+                "image_prompt": "A prompt to describe the image for this news (e.g. 'Voting queue in Kerala')",
+                "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
+              }
+            ]
+            """
+        )
+        
+        prompt = f"Generate 6 latest election news items in {request.language} language."
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        
+        if text.startswith(""): text = text[3:-3]
+        
+        data = json.loads(text)
+        return data
+
+    except Exception as e:
+        print(f"News Error: {e}")
+        return []
+
+class NewsRequest(BaseModel):
+    language: str
+
+@app.post("/latest-news")
+async def latest_news(request: NewsRequest):
+    print(f"News Request: {request.language}")
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            generation_config={"response_mime_type": "application/json"},
+            system_instruction="""You are an unbiased news aggregator for Indian Elections.
+            Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
+            
+            OUTPUT SCHEMA (JSON):
+            [
+              {
+                "headline": "Headline in requested language",
+                "summary": "Short 2-sentence summary in requested language",
+                "date": "Today's Date",
+                "source": "Source Name (e.g. DD News, ECI)",
+                "image_prompt": "A prompt to describe the image for this news (e.g. 'Voting queue in Kerala')",
+                "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
+              }
+            ]
+            """
+        )
+        
+        prompt = f"Generate 6 latest election news items in {request.language} language."
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        
+        if text.startswith("```json"): text = text[7:-3]
+        elif text.startswith("```"): text = text[3:-3]
+        
+        data = json.loads(text)
+        return data
+
+    except Exception as e:
+        print(f"News Error: {e}")
+        return []

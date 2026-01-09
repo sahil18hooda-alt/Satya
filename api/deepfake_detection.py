@@ -1,123 +1,199 @@
+import cv2
+import torch
+import torch.nn as nn
 import numpy as np
+from facenet_pytorch import MTCNN
+from torchvision import models, transforms
 from PIL import Image
 import base64
 import io
 import ssl
-import sys
-import random
 
-# Lazy imports for optional ML libs
-try:
-    import torch
-    import torch.nn as nn
-    from facenet_pytorch import MTCNN
-    from torchvision import models, transforms
-    HAS_TORCH = True
-except ImportError:
-    HAS_TORCH = False
-
-# Try OpenCV (might be missing on Vercel Free Tier)
-try:
-    import cv2
-    HAS_OPENCV = True
-except ImportError:
-    HAS_OPENCV = False
-
-# Bypass SSL verification
+# Bypass SSL verification for model downloads (common issue on Mac)
 ssl._create_default_https_context = ssl._create_unverified_context
 
 class DeepfakeDetector:
     def __init__(self, device='cpu'):
-        self.lite_mode = not HAS_TORCH
-        self.no_cv = not HAS_OPENCV
-        print(f"DeepfakeDetector initializing (Lite: {self.lite_mode}, NoCV: {self.no_cv})...")
+        self.device = torch.device('cuda' if torch.cuda.is_available() else device)
+        print(f"DeepfakeDetector initializing on {self.device}...")
 
-        if HAS_TORCH:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else device)
-            # Load models... (omitted for brevity in this fallback logic)
-            # We assume if Torch is present, we have space (e.g. Render), but for Vercel we rely on LITE.
-            self.mtcnn = MTCNN(keep_all=False, select_largest=True, device=self.device)
-            weights = models.EfficientNet_B4_Weights.IMAGENET1K_V1
-            self.visual_model = models.efficientnet_b4(weights=weights)
-            num_ftrs = self.visual_model.classifier[1].in_features
-            self.visual_model.classifier[1] = nn.Linear(num_ftrs, 1)
-            self.visual_model = self.visual_model.to(self.device)
-            self.visual_model.eval()
-            self.transform = transforms.Compose([
-                transforms.Resize((380, 380)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
+        # 1. The Cleaner: Face Extractor
+        self.mtcnn = MTCNN(keep_all=False, select_largest=True, device=self.device)
+
+        # 2. Stream A: Visual Artifacts (EfficientNet-B4)
+        # Using pretrained weights for feature extraction foundation
+        weights = models.EfficientNet_B4_Weights.IMAGENET1K_V1
+        self.visual_model = models.efficientnet_b4(weights=weights)
+        
+        # Modify classifier for 2 classes (Real vs Fake)
+        num_ftrs = self.visual_model.classifier[1].in_features
+        self.visual_model.classifier[1] = nn.Linear(num_ftrs, 1) # Sigmoid output later
+        self.visual_model = self.visual_model.to(self.device)
+        self.visual_model.eval()
+
+        # 3. Stream B: Audio-Visual Sync (SyncNet Placeholder)
+        # In a full production system, we would load 'wav2lip' or 'syncnet' weights here.
+        # For this prototype, we will simulate the sync check architecture.
+        self.sync_model = self._build_sync_stream().to(self.device)
+        self.sync_model.eval()
+
+        self.transform = transforms.Compose([
+            transforms.Resize((380, 380)), # EfficientNet-B4 input size
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+    def _build_sync_stream(self):
+        """Builds a lightweight placeholder for the SyncNet stream."""
+        model = nn.Sequential(
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 1),
+            nn.Sigmoid()
+        )
+        return model
+
+    def preprocess_video(self, video_path):
+        """Extracts frames where faces are clearly visible."""
+        print(f"Processing Video: {video_path}")
+        cap = cv2.VideoCapture(video_path)
+        frames = []
+        
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        print(f"Total Frames Detected: {frame_count}")
+        
+        if frame_count == 0: 
+            print("Error: Frame count is 0. Attempting to read linearly...")
+            # Fallback for streams/containers without header info
+            frame_count = 1000 
+
+        # Strategy: Scan more aggressively (every 5th frame)
+        for i in range(0, frame_count, 5):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+            ret, frame = cap.read()
+            if not ret: 
+                print(f"Frame read failed at index {i}")
+                continue # Try next index instead of breaking immediately
+            
+            # Convert BGR to RGB
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(rgb_frame)
+            
+            # Detect face
+            try:
+                boxes, _ = self.mtcnn.detect(pil_img)
+            except Exception as e:
+                print(f"MTCNN Error at frame {i}: {e}")
+                continue
+
+            if boxes is not None:
+                print(f"Face Found at frame {i}!")
+                # Crop the first face
+                box = boxes[0]
+                face = pil_img.crop(box)
+                frames.append(face)
+            else:
+                pass # print(f"No face at {i}")
+            
+            if len(frames) >= 5: # Limit to 5 frames for prototype speed
+                break
+        
+        cap.release()
+        print(f"Extracted {len(frames)} face frames.")
+        return frames
+
+    def generate_heatmap(self, tensor_img):
+        """
+        Simulates Grad-CAM heatmap generation.
+        In a real scenario, this hooks into the last conv layer gradients.
+        Here, we generate a synthetic heatmap based on high-frequency regions (mouth/eyes).
+        """
+        # Un-normalize for visualization
+        img = tensor_img.cpu().squeeze().permute(1, 2, 0).numpy()
+        img = (img * 0.229) + 0.485 # Approx un-norm
+        img = np.clip(img, 0, 1)
+
+        # Create a dummy heatmap mask (highlighting center - usually mouth/nose)
+        h, w, _ = img.shape
+        heatmap = np.zeros((h, w), dtype=np.float32)
+        
+        # Highlight lower center (mouth region)
+        cv2.circle(heatmap, (w//2, h//2 + 20), 40, (1.0,), -1)
+        heatmap = cv2.GaussianBlur(heatmap, (55, 55), 0)
+
+        # Colorize
+        heatmap = np.uint8(255 * heatmap)
+        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+        
+        # Overlay
+        img_uint8 = np.uint8(255 * img)
+        img_bgr = cv2.cvtColor(img_uint8, cv2.COLOR_RGB2BGR)
+        overlay = cv2.addWeighted(img_bgr, 0.6, heatmap, 0.4, 0)
+        
+        # Convert to base64 for frontend
+        _, buffer = cv2.imencode('.jpg', overlay)
+        return base64.b64encode(buffer).decode('utf-8')
 
     def detect(self, video_path):
         """
-        Main pipeline.
-        If OpenCV is missing (Vercel Free Tier), it simulates detection to allow UI demonstration.
+        Main inference pipeline.
+        Returns: { 'isFake': bool, 'confidence': float, 'heatmap': base64_str }
         """
-        if self.no_cv:
-            # --- Vercel Free Tier Fallback (Simulation) ---
-            # Without OpenCV or FFMPEG, we can't robustly decode video frames in Python Serverless
-            # without bloating the bundle. We provide a demo response.
-            
-            # Deterministic simulation based on filename hash to make it feel consistent
-            seed = sum([ord(c) for c in video_path]) 
-            random.seed(seed)
-            
-            confidence = 0.6 + (random.random() * 0.35) # 0.6 to 0.95
-            is_fake = random.random() > 0.5
-            
-            return {
-                "isFake": is_fake,
-                "confidence": round(confidence, 4),
-                "heatmap": None, # Cannot generate heatmap without frame access
-                "processed_frames": 0,
-                "mode": "DEMO_NO_CV"
-            }
+        frames = self.preprocess_video(video_path)
+        if not frames:
+            return {"error": "No faces detected in video."}
 
-        # --- Standard/Lite Logic with OpenCV ---
-        cap = cv2.VideoCapture(video_path)
-        frames = []
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        if frame_count == 0: return {"error": "Could not read video"}
-
+        # Run Inference on gathered frames
         fake_scores = []
         heatmaps = []
 
-        # Process frames
-        for i in range(0, min(frame_count, 50), 10):
-            cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-            ret, frame = cap.read()
-            if not ret: break
-            
-            # Simple Heuristic: Blurriness (Laplacian Var)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            variance = cv2.Laplacian(gray, cv2.CV_64F).var()
-            
-            # Heuristic: Lower variance = Smoother/Blurrier = More likely Fake
-            # Mapping: <100 (Blurry) -> High Score. >300 (Sharp) -> Low Score
-            score = 1.0 / (1.0 + np.exp((variance - 150) / 50))
-            fake_scores.append(score)
-            
-            # Generate one heatmap
-            if not heatmaps:
-                # Mock Heatmap for Lite Mode
-                h, w, _ = frame.shape
-                heatmap = np.zeros((h, w), dtype=np.float32)
-                cv2.circle(heatmap, (w//2, h//2), 50, (1.0,), -1)
-                heatmap = np.uint8(255 * heatmap)
-                heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-                overlay = cv2.addWeighted(frame, 0.7, heatmap, 0.3, 0)
-                _, buf = cv2.imencode('.jpg', overlay)
-                heatmaps.append(base64.b64encode(buf).decode('utf-8'))
+        with torch.no_grad():
+            for face in frames:
+                # Preprocess
+                input_tensor = self.transform(face).unsqueeze(0).to(self.device)
+                
+                # Stream A: Visual artifacts (Heuristic: Blur/Smoothness Mismatch)
+                # AI faces are often "smoother" (low frequency) than the background.
+                
+                # 1. Calculate Face Sharpness (Laplacian Variance)
+                face_cv = np.array(face) 
+                face_cv = cv2.cvtColor(face_cv, cv2.COLOR_RGB2GRAY)
+                
+                # Preprocessing: Mild Gaussian Blur to remove grain/compression noise
+                # This prevents low-quality real videos from having artificially high variance (sharpness)
+                face_cv_blurred = cv2.GaussianBlur(face_cv, (3, 3), 0)
+                
+                face_var = cv2.Laplacian(face_cv_blurred, cv2.CV_64F).var()
+                print(f"Frame Face Variance: {face_var}") # Debug Log
+                
+                # 2. Heuristic Score
+                # Normal sharp face ~ 300-500. Blurry/Smooth AI face < 100.
+                # Normal sharp face ~ 300-500. Blurry/Smooth AI face < 100.
+                # We map variance to a probability: Lower var -> Higher Fake Prob.
+                
+                # Sigmoid-ish mapping: 
+                # If var < 150 (Smooth) -> High fake score.
+                # If var > 300 (Sharp) -> Low fake score.
+                
+                heuristic_score = 1.0 / (1.0 + np.exp((face_var - 150) / 50))
+                
+                # Stream B: NN (Still random/untrained, so we reduce its weight)
+                visual_logits = self.visual_model(input_tensor)
+                visual_prob = torch.sigmoid(visual_logits).item()
+                
+                # Fusion: 80% Heuristic, 20% NN (Noise)
+                score = (heuristic_score * 0.8) + (visual_prob * 0.2)
+                fake_scores.append(score)
+                
+                # Generate heatmap for the first frame only
+                if not heatmaps:
+                    heatmaps.append(self.generate_heatmap(input_tensor))
 
-        cap.release()
-        
         avg_score = sum(fake_scores) / len(fake_scores) if fake_scores else 0
         
         return {
-            "isFake": avg_score > 0.6,
-            "confidence": round(avg_score, 4),
+            "isFake": bool(avg_score > 0.65), # Ensure native python bool
+            "confidence": float(round(avg_score, 4)),
             "heatmap": heatmaps[0] if heatmaps else None,
-            "processed_frames": len(frames),
-            "mode": "LITE_CV"
+            "processed_frames": len(frames)
         }

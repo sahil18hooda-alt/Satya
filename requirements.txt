@@ -7,4 +7,6 @@ google-generativeai
 gTTS
 numpy
 pillow
+pillow
+python-multipart
 # Removed opencv and heavy ML libs to strictly fit Vercel 250MB limit

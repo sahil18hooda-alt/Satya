@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Search, FileText, Globe, Loader2, Clipboard as ClipboardIcon, Mic, FileVideo, Landmark, Puzzle } from "lucide-react";
 import { RumorAnalysis } from "@/components/RumorAnalysis";
@@ -11,6 +11,7 @@ import { ViralWatch } from "@/components/ViralWatch";
 import { RecentCheckResult } from "@/components/RecentCheckResult";
 import { VerificationTabs } from "@/components/VerificationTabs";
 import { ElectionNews } from "@/components/ElectionNews";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'game' | 'dividend' | 'news'>('rumor');
@@ -20,9 +21,58 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  // Language Support
+  const { currentLanguage, translateNow } = useLanguage();
+  const [headlinePart1, setHeadlinePart1] = useState("Don't Forward");
+  const [headlinePart2, setHeadlinePart2] = useState("Checking.");
+  const [subtext, setSubtext] = useState("Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.");
+
+  useEffect(() => {
+    const updateText = async () => {
+      if (currentLanguage === 'en') {
+        setHeadlinePart1("Don't Forward");
+        setHeadlinePart2("Checking.");
+        setSubtext("Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.");
+
+        // Reset Logic Layer
+        setLogicTitle("Constitutional Logic Layer");
+        setLogicDesc("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution.");
+        setLogicPlaceholder("Ask about ONOE, Article 83, or Election Reforms...");
+        setLogicAnalyzeBtn("Analyze");
+        setGovRationaleTitle("Government Rationale");
+        setOppConcernsTitle("Opposition Concerns");
+        setNeutralSumTitle("Neutral Summation");
+        setCitationsTitle("Citations");
+      } else {
+        setHeadlinePart1(await translateNow("Don't Forward"));
+        setHeadlinePart2(await translateNow("Checking."));
+        setSubtext(await translateNow("Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine."));
+
+        // Translate Logic Layer
+        setLogicTitle(await translateNow("Constitutional Logic Layer"));
+        setLogicDesc(await translateNow("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution."));
+        setLogicPlaceholder(await translateNow("Ask about ONOE, Article 83, or Election Reforms..."));
+        setLogicAnalyzeBtn(await translateNow("Analyze"));
+        setGovRationaleTitle(await translateNow("Government Rationale"));
+        setOppConcernsTitle(await translateNow("Opposition Concerns"));
+        setNeutralSumTitle(await translateNow("Neutral Summation"));
+        setCitationsTitle(await translateNow("Citations"));
+      }
+    };
+    updateText();
+  }, [currentLanguage]);
+
   // Logic Layer State
   const [logicQuery, setLogicQuery] = useState("");
   const [logicResult, setLogicResult] = useState<any>(null);
+  const [logicTitle, setLogicTitle] = useState("Constitutional Logic Layer");
+  const [logicDesc, setLogicDesc] = useState("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution.");
+  const [logicPlaceholder, setLogicPlaceholder] = useState("Ask about ONOE, Article 83, or Election Reforms...");
+  const [logicAnalyzeBtn, setLogicAnalyzeBtn] = useState("Analyze");
+  const [govRationaleTitle, setGovRationaleTitle] = useState("Government Rationale");
+  const [oppConcernsTitle, setOppConcernsTitle] = useState("Opposition Concerns");
+  const [neutralSumTitle, setNeutralSumTitle] = useState("Neutral Summation");
+  const [citationsTitle, setCitationsTitle] = useState("Citations");
 
   // Voice State
   const [isRecording, setIsRecording] = useState(false);
@@ -152,7 +202,7 @@ export default function Home() {
       const response = await fetch(`${API_URL}/chat-constitutional`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: logicQuery }),
+        body: JSON.stringify({ query: logicQuery, language: currentLanguage }),
       });
       const data = await response.json();
       setLogicResult(data);
@@ -164,35 +214,30 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center pb-20 bg-white text-slate-900 transition-colors">
+    <main className="min-h-screen flex flex-col items-center pb-20 transition-colors">
       <section className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-6">
 
         {/* Header Section */}
         <div className="text-left mb-8 md:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 border border-blue-200">
-            <ShieldCheck className="w-3 h-3" /> Official Election Fact-Checker
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-[#1a1a1a] mb-6 tracking-tight leading-tight">
-            Don't Forward without
-            <br />
-            <span className="relative inline-block mt-2">
-              <span className="relative z-10 text-white bg-black px-4 py-2 rounded-xl shadow-lg transform -rotate-2 inline-block">Checking.</span>
-            </span>
+          {/* Tag Removed or Updated to Minimal */}
+
+          <h1 className="text-5xl md:text-7xl font-bold text-[#1f242e] mb-6 tracking-tight leading-[1.1]">
+            {headlinePart1} <span className="text-[#f97316] font-extrabold">Without</span> <span className="text-[#16a34a] font-extrabold">Checking.</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-            Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.
+          <p className="text-lg md:text-xl text-gray-500 max-w-2xl leading-relaxed">
+            {subtext}
           </p>
         </div>
 
-        {/* Navigation Tabs (Top Level) */}
-        <div className="flex flex-wrap gap-2 md:gap-4 mb-8">
+        {/* Navigation Tabs (Top Level) - Pills Style */}
+        <div className="flex flex-wrap gap-3 md:gap-4 mb-8">
           {['rumor', 'logic', 'deepfake', 'game', 'dividend', 'news'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-5 py-2 rounded-full font-semibold transition-all text-sm md:text-base ${activeTab === tab
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              className={`px-6 py-2.5 rounded-full font-bold text-sm tracking-wide transition-all ${activeTab === tab
+                ? 'bg-[#13316c] text-white shadow-md ring-2 ring-[#13316c] ring-offset-2'
+                : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
                 }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -202,11 +247,10 @@ export default function Home() {
 
         {
           activeTab === 'rumor' ? (
-            /* Dashboard Layout: 2 Columns */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-              {/* Left Column (Input & Results) */}
-              <div className="lg:col-span-2 space-y-8">
+              {/* Left Column (Input & Results) - Order 2 on Mobile, Order 1 on Desktop */}
+              <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
                 <VerificationTabs onVerify={handleVerifyRequest} isAnalyzing={isAnalyzing} />
 
                 <AnimatePresence>
@@ -222,8 +266,8 @@ export default function Home() {
                 </AnimatePresence>
               </div>
 
-              {/* Right Column (Stats & Trends) */}
-              <div className="space-y-6">
+              {/* Right Column (Stats & Trends) - Order 1 on Mobile, Order 2 on Desktop */}
+              <div className="space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
                 <StatsCard />
                 <ViralWatch />
 
@@ -255,15 +299,15 @@ export default function Home() {
             >
               {/* Logic UI Content */}
               <div className="bg-card border shadow-lg rounded-2xl p-6">
-                <h2 className="text-2xl font-bold mb-2">Constitutional Logic Layer</h2>
+                <h2 className="text-2xl font-bold mb-2">{logicTitle}</h2>
                 <p className="text-muted-foreground mb-4">
-                  Powered by "Veil of Ignorance". Provides symmetrical arguments grounded in the Constitution.
+                  {logicDesc}
                 </p>
                 <div className="flex gap-2">
                   <textarea
                     value={logicQuery}
                     onChange={(e) => setLogicQuery(e.target.value)}
-                    placeholder="Ask about ONOE, Article 83, or Election Reforms..."
+                    placeholder={logicPlaceholder}
                     className="flex-1 min-h-[80px] px-4 py-3 bg-muted/50 border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none resize-none"
                   />
                   <button
@@ -271,7 +315,7 @@ export default function Home() {
                     disabled={isAnalyzing || !logicQuery.trim()}
                     className="bg-primary text-primary-foreground px-6 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 h-auto"
                   >
-                    {isAnalyzing ? <Loader2 className="animate-spin" /> : "Analyze"}
+                    {isAnalyzing ? <Loader2 className="animate-spin" /> : logicAnalyzeBtn}
                   </button>
                 </div>
               </div>
@@ -280,24 +324,24 @@ export default function Home() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-6 rounded-2xl">
                     <h3 className="font-bold text-green-700 dark:text-green-300 text-lg mb-2 flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5" /> Government Rationale
+                      <ShieldCheck className="w-5 h-5" /> {govRationaleTitle}
                     </h3>
                     <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{logicResult.pro_argument}</p>
                   </div>
 
                   <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-6 rounded-2xl">
                     <h3 className="font-bold text-orange-700 dark:text-orange-300 text-lg mb-2 flex items-center gap-2">
-                      <Search className="w-5 h-5" /> Opposition Concerns
+                      <Search className="w-5 h-5" /> {oppConcernsTitle}
                     </h3>
                     <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{logicResult.con_argument}</p>
                   </div>
 
                   <div className="col-span-1 md:col-span-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-6 rounded-2xl">
-                    <h3 className="font-bold text-blue-700 dark:text-blue-300 text-lg mb-2">Neutral Summation</h3>
+                    <h3 className="font-bold text-blue-700 dark:text-blue-300 text-lg mb-2">{neutralSumTitle}</h3>
                     <p className="text-foreground/90 whitespace-pre-wrap">{logicResult.neutral_summation}</p>
 
                     <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">Citations</p>
+                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">{citationsTitle}</p>
                       <div className="flex flex-wrap gap-2">
                         {logicResult.citations?.map((cite: string, i: number) => (
                           <span key={i} className="text-xs bg-background border px-2 py-1 rounded-md text-muted-foreground">
@@ -481,7 +525,12 @@ function DeepfakeUploader() {
               {result.isFake ? "LIKELY FAKE" : "LIKELY REAL"}
             </h3>
             <p className="text-lg font-medium mb-1">
-              Confidence Score: <span className="text-xl font-bold">{(result.confidence * 100).toFixed(1)}%</span>
+              {result.isFake ? "Fake Probability: " : "Real Probability: "}
+              <span className="text-xl font-bold">
+                {result.isFake
+                  ? `${(result.confidence * 100).toFixed(1)}%`
+                  : `${((1 - result.confidence) * 100).toFixed(1)}%`}
+              </span>
             </p>
             <p className="text-sm text-muted-foreground">
               Analyzed {result.processed_frames} key frames using Dual-Stream Network.

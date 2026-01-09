@@ -3,21 +3,21 @@ import { Share2, Flame, Filter } from "lucide-react";
 const MYTHS = [
     {
         tag: "FALSE",
-        tagColor: "bg-red-100 text-red-600",
+        tagColor: "bg-[#fee2e2] text-[#991b1b]", // Light Red bg, Dark Red text
         title: 'Video showing "ballot stuffing" in Kerala is from 2019 mock drill',
         shares: "12k",
         trending: true,
     },
     {
         tag: "MISLEADING",
-        tagColor: "bg-orange-100 text-orange-600",
+        tagColor: "bg-[#fef3c7] text-[#92400e]", // Amber bg, Amber text
         title: "New election rules do NOT require voters to surrender phones",
         shares: "8.5k",
         trending: false,
     },
     {
         tag: "FALSE",
-        tagColor: "bg-red-100 text-red-600",
+        tagColor: "bg-[#fee2e2] text-[#991b1b]",
         title: "Free laptop scheme for students linked in WhatsApp is a phishing scam",
         shares: "5k",
         trending: false,
