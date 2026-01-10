@@ -11,10 +11,12 @@ import { ViralWatch } from "@/components/ViralWatch";
 import { RecentCheckResult } from "@/components/RecentCheckResult";
 import { VerificationTabs } from "@/components/VerificationTabs";
 import { ElectionNews } from "@/components/ElectionNews";
+import { VoiceAssistant } from "@/components/VoiceAssistant";
+import { AccessibilityAssistant } from "@/components/AccessibilityAssistant";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'game' | 'dividend' | 'news'>('rumor');
+  const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news'>('rumor');
 
   // Rumor Buster State
   const [query, setQuery] = useState("");
@@ -231,7 +233,7 @@ export default function Home() {
 
         {/* Navigation Tabs (Top Level) - Pills Style */}
         <div className="flex flex-wrap gap-3 md:gap-4 mb-8">
-          {['rumor', 'logic', 'deepfake', 'game', 'dividend', 'news'].map((tab) => (
+          {['rumor', 'logic', 'deepfake', 'voice', 'accessibility', 'game', 'dividend', 'news'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -383,6 +385,26 @@ export default function Home() {
               className="w-full"
             >
               <DemocracyDividend />
+            </motion.div>
+          ) : activeTab === 'voice' ? (
+            /* Voice Assistant */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              key="voice"
+              className="w-full"
+            >
+              <VoiceAssistant />
+            </motion.div>
+          ) : activeTab === 'accessibility' ? (
+            /* Accessibility & Voting Rights */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              key="accessibility"
+              className="w-full"
+            >
+              <AccessibilityAssistant />
             </motion.div>
           ) : activeTab === 'news' ? (
             /* Election News */

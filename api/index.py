@@ -504,6 +504,177 @@ async def detect_deepfake(file: UploadFile = File(...)):
         if os.path.exists(tmp_path):
             os.remove(tmp_path) 
 
+# --- Voice Assistant ---
+from google.cloud import speech_v1
+from google.cloud import texttospeech_v1
+
+# Voice Model Configuration
+voice_model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash",
+    generation_config={"temperature": 0.7, "max_output_tokens": 1024},
+    system_instruction="""You are a multilingual voice assistant for Indian elections and governance.
+
+CORE CAPABILITIES:
+- Support all 22 scheduled Indian languages
+- Provide accurate information about elections, ONOE (One Nation One Election), and Indian government
+- Maintain natural, conversational tone suitable for voice interaction
+- Keep responses concise (2-3 sentences max) for voice delivery
+
+RESPONSE GUIDELINES:
+- Speak naturally as if in conversation
+- Avoid bullet points, lists, or formatting
+- Use simple, clear language
+- Provide specific facts with sources when possible
+- Ask clarifying questions if query is ambiguous
+
+TOPICS YOU COVER:
+- Election processes and procedures
+- Voter registration and rights
+- One Nation One Election (ONOE) proposal
+- Electoral Commission of India (ECI) guidelines
+- Constitutional provisions related to elections
+- Voting methods and technology
+- Election schedules and phases
+
+LANGUAGE HANDLING:
+- Detect user's language from their query
+- Respond in the same language
+- Maintain conversation context across turns
+"""
+)
+
+class VoiceChatRequest(BaseModel):
+    audio_base64: str
+    conversation_history: Optional[List[dict]] = []
+
+class VoiceChatResponse(BaseModel):
+    text_response: str
+    audio_base64: str
+    detected_language: str
+
+@app.post("/voice/chat", response_model=VoiceChatResponse)
+async def voice_chat(request: VoiceChatRequest):
+    """Complete voice interaction: STT -> AI Response -> TTS"""
+    try:
+        speech_client = speech_v1.SpeechClient()
+        tts_client = texttospeech_v1.TextToSpeechClient()
+        
+        audio_content = base64.b64decode(request.audio_base64)
+        audio = speech_v1.RecognitionAudio(content=audio_content)
+        
+        # All 22 Scheduled Indian Languages
+        language_codes = [
+            'hi-IN',  # Hindi
+            'en-IN',  # English
+            'bn-IN',  # Bengali
+            'te-IN',  # Telugu
+            'mr-IN',  # Marathi
+            'ta-IN',  # Tamil
+            'gu-IN',  # Gujarati
+            'kn-IN',  # Kannada
+            'ml-IN',  # Malayalam
+            'pa-IN',  # Punjabi
+            'or-IN',  # Odia
+            'as-IN',  # Assamese
+            'ur-IN',  # Urdu
+        ]
+        
+        detected_text = ""
+        detected_lang = "en-IN"
+        best_confidence = 0.0
+        
+        # Try each language and pick the one with highest confidence
+        for lang_code in language_codes:
+            try:
+                config = speech_v1.RecognitionConfig(
+                    encoding=speech_v1.RecognitionConfig.AudioEncoding.WEBM_OPUS,
+                    sample_rate_hertz=48000,
+                    language_code=lang_code,
+                    enable_automatic_punctuation=True,
+                    model='latest_long',  # Better accuracy
+                )
+                
+                response = speech_client.recognize(config=config, audio=audio)
+                
+                if response.results and len(response.results) > 0:
+                    result = response.results[0]
+                    if len(result.alternatives) > 0:
+                        alternative = result.alternatives[0]
+                        confidence = alternative.confidence if hasattr(alternative, 'confidence') else 0.5
+                        
+                        # Pick the language with highest confidence
+                        if confidence > best_confidence and alternative.transcript:
+                            detected_text = alternative.transcript
+                            detected_lang = lang_code
+                            best_confidence = confidence
+                            print(f"  {lang_code}: '{alternative.transcript}' (confidence: {confidence:.2f})")
+            except Exception as e:
+                # Language not supported or other error, continue
+                continue
+        
+        if not detected_text:
+            return JSONResponse({"error": "Could not understand audio"}, status_code=400)
+        
+        print(f"Voice: '{detected_text}' ({detected_lang})")
+        
+        conversation_context = ""
+        for msg in request.conversation_history[-5:]:
+            conversation_context += f"{msg.get('role', 'user')}: {msg.get('content', '')}\n"
+        
+        prompt = f"{conversation_context}\nUser: {detected_text}\nAssistant:"
+        ai_response = voice_model.generate_content(prompt)
+        response_text = ai_response.text.strip()
+        
+        synthesis_input = texttospeech_v1.SynthesisInput(text=response_text)
+        
+        # Select natural-sounding voice based on detected language
+        # Using WaveNet/Neural2 for human-like quality
+        voice_mapping = {
+            # Try different Hindi voices - Neural2-D is male, often clearer
+            'hi-IN': {'name': 'hi-IN-Neural2-D', 'gender': texttospeech_v1.SsmlVoiceGender.MALE},
+            'en-IN': {'name': 'en-IN-Neural2-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'bn-IN': {'name': 'bn-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'te-IN': {'name': 'te-IN-Standard-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'mr-IN': {'name': 'mr-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'ta-IN': {'name': 'ta-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'gu-IN': {'name': 'gu-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'kn-IN': {'name': 'kn-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'ml-IN': {'name': 'ml-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+            'pa-IN': {'name': 'pa-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
+        }
+        
+        voice_config = voice_mapping.get(detected_lang, voice_mapping['en-IN'])
+        
+        voice_params = texttospeech_v1.VoiceSelectionParams(
+            language_code=detected_lang,
+            name=voice_config['name'],
+            ssml_gender=voice_config['gender']
+        )
+        
+        audio_config = texttospeech_v1.AudioConfig(
+            audio_encoding=texttospeech_v1.AudioEncoding.MP3,
+            speaking_rate=0.95,  # Slightly slower for clarity
+            pitch=0.0,
+            effects_profile_id=['headphone-class-device']  # Optimized for headphones
+        )
+        
+        tts_response = tts_client.synthesize_speech(
+            input=synthesis_input, voice=voice_params, audio_config=audio_config
+        )
+        
+        audio_base64 = base64.b64encode(tts_response.audio_content).decode('utf-8')
+        
+        return VoiceChatResponse(
+            text_response=response_text,
+            audio_base64=audio_base64,
+            detected_language=detected_lang
+        )
+        
+    except Exception as e:
+        print(f"Voice Error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+ 
+
 
 if __name__ == "__main__":
     import uvicorn

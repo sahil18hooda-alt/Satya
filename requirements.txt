@@ -1,12 +1,17 @@
 fastapi
 uvicorn
-pydantic
-requests
-python-dotenv
+python-multipart
 google-generativeai
-gTTS
+pydantic
+python-dotenv
+aiofiles
+torch
+torchvision
+torchaudio
+opencv-python-headless
+facenet-pytorch
 numpy
 pillow
-pillow
-python-multipart
-# Removed opencv and heavy ML libs to strictly fit Vercel 250MB limit
+gTTS
+google-cloud-speech
+google-cloud-texttospeech
