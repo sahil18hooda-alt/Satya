@@ -1,6 +1,6 @@
 export interface Section {
     title: string;
-    content: string[];
+    content?: string[];
     subsections?: { title: string; items: string[] }[];
 }
 
