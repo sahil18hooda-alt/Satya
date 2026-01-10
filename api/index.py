@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import google.generativeai as genai
 from dotenv import load_dotenv
+import httpx
 try:
     from .deepfake_detection import DeepfakeDetector
 except ImportError:
@@ -226,17 +227,37 @@ async def chat_audio(file: UploadFile = File(...)):
         
         print(f"Response: {text_resp} (Lang: {lang})")
         
-        # Text to Speech
+        # Text to Speech via Sarvam AI
         try:
-            tts = gTTS(text=text_resp, lang=lang)
+            async with httpx.AsyncClient() as client:
+                headers = {
+                    "api-subscription-key": os.getenv("SARVAM_AI_API_KEY"),
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "inputs": [text_resp],
+                    "target_language_code": lang + "-IN" if "-" not in lang else lang,
+                    "speaker": "anushka",
+                    "model": "bulbul:v2"
+                }
+                tts_res = await client.post("https://api.sarvam.ai/text-to-speech", headers=headers, json=payload)
+                if tts_res.status_code == 200:
+                    base64_audio = tts_res.json()["audios"][0]
+                else:
+                    print(f"Sarvam TTS Error: {tts_res.text}")
+                    # Keep gTTS as emergency fallback but log it
+                    tts = gTTS(text=text_resp, lang=lang)
+                    mp3_fp = io.BytesIO()
+                    tts.write_to_fp(mp3_fp)
+                    mp3_fp.seek(0)
+                    base64_audio = base64.b64encode(mp3_fp.read()).decode("utf-8")
         except Exception as e:
-             print(f"gTTS Error for lang {lang}: {e}")
-             tts = gTTS(text=text_resp, lang='en')
-             
-        mp3_fp = io.BytesIO()
-        tts.write_to_fp(mp3_fp)
-        mp3_fp.seek(0)
-        base64_audio = base64.b64encode(mp3_fp.read()).decode("utf-8")
+             print(f"Sarvam Error: {e}")
+             tts = gTTS(text=text_resp, lang='hi') # Default to Hindi for fallback if possible
+             mp3_fp = io.BytesIO()
+             tts.write_to_fp(mp3_fp)
+             mp3_fp.seek(0)
+             base64_audio = base64.b64encode(mp3_fp.read()).decode("utf-8")
         
         return {"text": text_resp, "audio": base64_audio}
 
@@ -505,8 +526,10 @@ async def detect_deepfake(file: UploadFile = File(...)):
             os.remove(tmp_path) 
 
 # --- Voice Assistant ---
-from google.cloud import speech_v1
-from google.cloud import texttospeech_v1
+# Sarvam AI Configuration
+SARVAM_API_KEY = os.getenv("SARVAM_AI_API_KEY")
+SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
+SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 
 # Voice Model Configuration
 voice_model = genai.GenerativeModel(
@@ -548,123 +571,94 @@ class VoiceChatRequest(BaseModel):
     conversation_history: Optional[List[dict]] = []
 
 class VoiceChatResponse(BaseModel):
+    text_query: str
     text_response: str
     audio_base64: str
     detected_language: str
 
 @app.post("/voice/chat", response_model=VoiceChatResponse)
 async def voice_chat(request: VoiceChatRequest):
-    """Complete voice interaction: STT -> AI Response -> TTS"""
+    """Complete voice interaction: Sarvam STT -> Gemini Response -> Sarvam TTS"""
     try:
-        speech_client = speech_v1.SpeechClient()
-        tts_client = texttospeech_v1.TextToSpeechClient()
-        
+        if not SARVAM_API_KEY:
+             return JSONResponse({"error": "Sarvam API Key not configured"}, status_code=500)
+
+        # 1. Speech-to-Text via Sarvam AI
         audio_content = base64.b64decode(request.audio_base64)
-        audio = speech_v1.RecognitionAudio(content=audio_content)
         
-        # All 22 Scheduled Indian Languages
-        language_codes = [
-            'hi-IN',  # Hindi
-            'en-IN',  # English
-            'bn-IN',  # Bengali
-            'te-IN',  # Telugu
-            'mr-IN',  # Marathi
-            'ta-IN',  # Tamil
-            'gu-IN',  # Gujarati
-            'kn-IN',  # Kannada
-            'ml-IN',  # Malayalam
-            'pa-IN',  # Punjabi
-            'or-IN',  # Odia
-            'as-IN',  # Assamese
-            'ur-IN',  # Urdu
-        ]
-        
-        detected_text = ""
-        detected_lang = "en-IN"
-        best_confidence = 0.0
-        
-        # Try each language and pick the one with highest confidence
-        for lang_code in language_codes:
-            try:
-                config = speech_v1.RecognitionConfig(
-                    encoding=speech_v1.RecognitionConfig.AudioEncoding.WEBM_OPUS,
-                    sample_rate_hertz=48000,
-                    language_code=lang_code,
-                    enable_automatic_punctuation=True,
-                    model='latest_long',  # Better accuracy
+        async with httpx.AsyncClient() as client:
+            files = {"file": ("audio.webm", audio_content, "audio/webm")}
+            headers = {"api-subscription-key": SARVAM_API_KEY}
+            
+            stt_response = await client.post(
+                "https://api.sarvam.ai/speech-to-text",
+                headers=headers,
+                files=files,
+                data={
+                    "model": "saarika:v2.5",
+                    "language_code": "unknown"
+                }
+            )
+            
+            if stt_response.status_code != 200:
+                print(f"Sarvam STT Error: {stt_response.text}")
+                # Try saaras:v1 as fallback on the -translate endpoint
+                stt_response = await client.post(
+                    "https://api.sarvam.ai/speech-to-text-translate",
+                    headers=headers,
+                    files=files,
+                    data={"model": "saaras:v1"}
                 )
-                
-                response = speech_client.recognize(config=config, audio=audio)
-                
-                if response.results and len(response.results) > 0:
-                    result = response.results[0]
-                    if len(result.alternatives) > 0:
-                        alternative = result.alternatives[0]
-                        confidence = alternative.confidence if hasattr(alternative, 'confidence') else 0.5
-                        
-                        # Pick the language with highest confidence
-                        if confidence > best_confidence and alternative.transcript:
-                            detected_text = alternative.transcript
-                            detected_lang = lang_code
-                            best_confidence = confidence
-                            print(f"  {lang_code}: '{alternative.transcript}' (confidence: {confidence:.2f})")
-            except Exception as e:
-                # Language not supported or other error, continue
-                continue
-        
+                if stt_response.status_code != 200:
+                    return JSONResponse({"error": f"STT failed: {stt_response.status_code} - {stt_response.text[:100]}"}, status_code=500)
+            
+            stt_data = stt_response.json()
+            detected_text = stt_data.get("transcript", "")
+            detected_lang = stt_data.get("language_code", "en-IN")
+
         if not detected_text:
-            return JSONResponse({"error": "Could not understand audio"}, status_code=400)
-        
+            return JSONResponse({"error": "No speech detected"}, status_code=400)
+
         print(f"Voice: '{detected_text}' ({detected_lang})")
         
+        # 2. Gemini Response
         conversation_context = ""
         for msg in request.conversation_history[-5:]:
-            conversation_context += f"{msg.get('role', 'user')}: {msg.get('content', '')}\n"
+            role = "User" if msg.get("role") == "user" else "Assistant"
+            conversation_context += f"{role}: {msg.get('content', '')}\n"
         
         prompt = f"{conversation_context}\nUser: {detected_text}\nAssistant:"
         ai_response = voice_model.generate_content(prompt)
         response_text = ai_response.text.strip()
         
-        synthesis_input = texttospeech_v1.SynthesisInput(text=response_text)
-        
-        # Select natural-sounding voice based on detected language
-        # Using WaveNet/Neural2 for human-like quality
-        voice_mapping = {
-            # Try different Hindi voices - Neural2-D is male, often clearer
-            'hi-IN': {'name': 'hi-IN-Neural2-D', 'gender': texttospeech_v1.SsmlVoiceGender.MALE},
-            'en-IN': {'name': 'en-IN-Neural2-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'bn-IN': {'name': 'bn-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'te-IN': {'name': 'te-IN-Standard-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'mr-IN': {'name': 'mr-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'ta-IN': {'name': 'ta-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'gu-IN': {'name': 'gu-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'kn-IN': {'name': 'kn-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'ml-IN': {'name': 'ml-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-            'pa-IN': {'name': 'pa-IN-Wavenet-A', 'gender': texttospeech_v1.SsmlVoiceGender.FEMALE},
-        }
-        
-        voice_config = voice_mapping.get(detected_lang, voice_mapping['en-IN'])
-        
-        voice_params = texttospeech_v1.VoiceSelectionParams(
-            language_code=detected_lang,
-            name=voice_config['name'],
-            ssml_gender=voice_config['gender']
-        )
-        
-        audio_config = texttospeech_v1.AudioConfig(
-            audio_encoding=texttospeech_v1.AudioEncoding.MP3,
-            speaking_rate=0.95,  # Slightly slower for clarity
-            pitch=0.0,
-            effects_profile_id=['headphone-class-device']  # Optimized for headphones
-        )
-        
-        tts_response = tts_client.synthesize_speech(
-            input=synthesis_input, voice=voice_params, audio_config=audio_config
-        )
-        
-        audio_base64 = base64.b64encode(tts_response.audio_content).decode('utf-8')
-        
+        # 3. Text-to-Speech via Sarvam AI
+        async with httpx.AsyncClient() as client:
+            tts_payload = {
+                "inputs": [response_text],
+                "target_language_code": detected_lang,
+                "speaker": "anushka",
+                "model": "bulbul:v2"
+            }
+            
+            headers = {
+                "api-subscription-key": SARVAM_API_KEY,
+                "Content-Type": "application/json"
+            }
+            
+            tts_response = await client.post(
+                "https://api.sarvam.ai/text-to-speech",
+                headers=headers,
+                json=tts_payload
+            )
+            
+            if tts_response.status_code != 200:
+                print(f"Sarvam TTS Error: {tts_response.text}")
+                return JSONResponse({"error": "Text-to-Speech failed"}, status_code=500)
+            
+            audio_base64 = tts_response.json().get("audios", [""])[0]
+
         return VoiceChatResponse(
+            text_query=detected_text,
             text_response=response_text,
             audio_base64=audio_base64,
             detected_language=detected_lang
