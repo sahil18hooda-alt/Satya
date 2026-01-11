@@ -1,0 +1,50 @@
+[
+    {
+        "id": "ls-lucknow-2024",
+        "name": "Lucknow (Lok Sabha)",
+        "type": "Lok Sabha",
+        "year": 2024,
+        "winner": "Candidate A",
+        "runnerUp": "Candidate B",
+        "winnerVotes": 575000,
+        "runnerUpVotes": 500000,
+        "totalRegistered": 1800000,
+        "totalVoted": 1150000
+    },
+    {
+        "id": "mla-bangalore-2023",
+        "name": "Jayanagar (Assembly)",
+        "type": "Assembly",
+        "year": 2023,
+        "winner": "Candidate X",
+        "runnerUp": "Candidate Y",
+        "winnerVotes": 48151,
+        "runnerUpVotes": 48135,
+        "totalRegistered": 210000,
+        "totalVoted": 125000
+    },
+    {
+        "id": "mc-mumbai-2022",
+        "name": "Ward 123 (Mumbai Municipal)",
+        "type": "Municipal",
+        "year": 2022,
+        "winner": "Candidate P",
+        "runnerUp": "Candidate Q",
+        "winnerVotes": 8500,
+        "runnerUpVotes": 8350,
+        "totalRegistered": 25000,
+        "totalVoted": 17000
+    },
+    {
+        "id": "panchayat-up-2021",
+        "name": "Gram Panchayat (Varanasi)",
+        "type": "Panchayat",
+        "year": 2021,
+        "winner": "Candidate S",
+        "runnerUp": "Candidate T",
+        "winnerVotes": 1240,
+        "runnerUpVotes": 1232,
+        "totalRegistered": 4000,
+        "totalVoted": 2800
+    }
+]

@@ -13,10 +13,11 @@ import { VerificationTabs } from "@/components/VerificationTabs";
 import { ElectionNews } from "@/components/ElectionNews";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
 import { AccessibilityAssistant } from "@/components/AccessibilityAssistant";
+import { MarginOfErrorVisualizer } from "@/components/MarginOfErrorVisualizer";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news'>('rumor');
+  const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news' | 'margin'>('rumor');
 
   // Rumor Buster State
   const [query, setQuery] = useState("");
@@ -233,7 +234,7 @@ export default function Home() {
 
         {/* Navigation Tabs (Top Level) - Pills Style */}
         <div className="flex flex-wrap gap-3 md:gap-4 mb-8">
-          {['rumor', 'logic', 'deepfake', 'voice', 'accessibility', 'game', 'dividend', 'news'].map((tab) => (
+          {['rumor', 'logic', 'deepfake', 'voice', 'accessibility', 'game', 'dividend', 'news', 'margin'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -415,6 +416,16 @@ export default function Home() {
               className="w-full"
             >
               <ElectionNews />
+            </motion.div>
+          ) : activeTab === 'margin' ? (
+            /* Margin of Error Visualizer */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              key="margin"
+              className="w-full"
+            >
+              <MarginOfErrorVisualizer />
             </motion.div>
           ) : null
         }
