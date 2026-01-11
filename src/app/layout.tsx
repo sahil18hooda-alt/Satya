@@ -17,7 +17,7 @@ const mukta = Mukta({
 });
 
 export const metadata: Metadata = {
-  title: "Satya Verify - Government Fact Check Portal",
+  title: "Official Government Fact Check Portal",
   description: "Official portal to verify news and combat misinformation.",
 };
 

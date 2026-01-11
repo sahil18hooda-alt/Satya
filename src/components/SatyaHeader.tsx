@@ -10,16 +10,9 @@ export function SatyaHeader() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
                 {/* Logo Section */}
-                <div className="flex items-center gap-3">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="text-[#13316c]">
-                            <ShieldCheck className="w-8 h-8" strokeWidth={2.5} />
-                        </div>
-                        <div className="flex flex-col leading-none">
-                            <span className="font-mukta font-bold text-2xl text-[#1f242e] tracking-tight group-hover:text-[#13316c] transition-colors">
-                                सत्य Verify
-                            </span>
-                        </div>
+                <div className="flex items-center">
+                    <Link href="/" className="flex items-center">
+                        <img src="/goi-logo.png" alt="Government of India" className="h-10 md:h-12 w-auto object-contain" />
                     </Link>
                 </div>
 
