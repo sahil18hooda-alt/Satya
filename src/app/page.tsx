@@ -14,6 +14,7 @@ import { ElectionNews } from "@/components/ElectionNews";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
 import { AccessibilityAssistant } from "@/components/AccessibilityAssistant";
 import { MarginOfErrorVisualizer } from "@/components/MarginOfErrorVisualizer";
+import PillNav from "@/components/PillNav";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
@@ -232,21 +233,26 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Navigation Tabs (Top Level) - Pills Style */}
-        <div className="flex flex-wrap gap-3 md:gap-4 mb-8">
-          {['rumor', 'logic', 'deepfake', 'voice', 'accessibility', 'game', 'dividend', 'news', 'margin'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-6 py-2.5 rounded-none font-bold text-sm tracking-wide transition-all ${activeTab === tab
-                ? 'bg-[#13316c] text-white shadow-md ring-2 ring-[#13316c] ring-offset-2'
-                : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
-                }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
+        {/* Navigation Tabs (PillNav GSAP Integration) */}
+        <PillNav
+          logo="/emblem.png"
+          logoAlt="SATYA Logo"
+          activeHref={activeTab}
+          items={[
+            { id: 'rumor', label: 'Rumor Buster', href: 'rumor', onClick: () => setActiveTab('rumor') },
+            { id: 'logic', label: 'Logic Layer', href: 'logic', onClick: () => setActiveTab('logic') },
+            { id: 'deepfake', label: 'Deepfake', href: 'deepfake', onClick: () => setActiveTab('deepfake') },
+            { id: 'voice', label: 'Voice AI', href: 'voice', onClick: () => setActiveTab('voice') },
+            { id: 'accessibility', label: 'Accessibility', href: 'accessibility', onClick: () => setActiveTab('accessibility') },
+            { id: 'game', label: 'Civic Game', href: 'game', onClick: () => setActiveTab('game') },
+            { id: 'dividend', label: 'Dividend', href: 'dividend', onClick: () => setActiveTab('dividend') },
+            { id: 'news', label: 'News', href: 'news', onClick: () => setActiveTab('news') },
+            { id: 'margin', label: 'Margin', href: 'margin', onClick: () => setActiveTab('margin') },
+          ]}
+          baseColor="#13316c"
+          pillColor="#fff"
+          className="mb-12"
+        />
 
         {
           activeTab === 'rumor' ? (
