@@ -33,8 +33,8 @@ export function SatyaHeader() {
                                 <span className="text-gray-600 text-[10px] md:text-sm font-semibold leading-none mb-1 uppercase tracking-tight">
                                     Government of India
                                 </span>
-                                <h1 className="text-[#003366] font-extrabold text-xl md:text-3xl leading-tight tracking-tight">
-                                    Ministry of Electronics and Information Technology
+                                <h1 className="text-[#003366] font-extrabold text-2xl md:text-4xl leading-tight tracking-tighter">
+                                    S.A.T.Y.A
                                 </h1>
                             </div>
                         </Link>
@@ -60,8 +60,8 @@ export function SatyaHeader() {
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id as any)}
                                 className={`px-5 py-3 text-sm font-bold whitespace-nowrap transition-all border-b-4 hover:bg-white/10 ${activeTab === item.id
-                                        ? 'border-white bg-white/20'
-                                        : 'border-transparent'
+                                    ? 'border-white bg-white/20'
+                                    : 'border-transparent'
                                     }`}
                             >
                                 {item.label}
