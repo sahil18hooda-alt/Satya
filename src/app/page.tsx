@@ -289,9 +289,6 @@ export default function Home() {
               <div className="space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
                 <StatsCard />
                 <ViralWatch />
-
-                <StatsCard />
-                <ViralWatch />
               </div>
 
             </div>
