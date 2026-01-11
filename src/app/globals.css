@@ -82,39 +82,6 @@
   }
 
   body {
-    @apply antialiased min-h-screen relative;
-    color: #1f2937;
-    background-image: url('/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(1px);
-    z-index: -1;
-  }
-
-  /* Ensure background visibility across all features */
-  .bg-card,
-  .bg-white,
-  .bg-slate-50 {
-    background-color: rgba(255, 255, 255, 0.75) !important;
-    backdrop-filter: blur(12px) !important;
-  }
-
-  /* Fix for dark mode if used */
-  .dark .bg-card,
-  .dark .bg-white,
-  .dark .bg-slate-50 {
-    background-color: rgba(15, 23, 42, 0.75) !important;
+    @apply bg-background text-foreground antialiased;
   }
 }

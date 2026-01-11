@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased`}>
+      <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased bg-[#fbfaf9]`}>
         <LanguageProvider>
           <SatyaHeader />
           {children}
