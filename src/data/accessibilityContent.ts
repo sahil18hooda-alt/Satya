@@ -28,7 +28,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "visual",
         name: "Visual Impairment / Blindness",
-        icon: "👁️",
+        icon: "",
         description: "For persons with complete blindness, low vision, or partial blindness",
         subcategories: ["Complete blindness", "Low vision", "Partial blindness"],
         info: {
@@ -220,14 +220,14 @@ export const disabilityCategories: DisabilityCategory[] = [
                     {
                         title: "Before Election Day",
                         items: [
-                            "✓ Verify your name is in the electoral roll (check on NVSP)",
-                            "✓ Check your polling station location and accessibility",
-                            "✓ Apply for postal ballot if eligible (at least 7 days in advance)",
-                            "✓ Arrange a companion if needed and inform them about the process",
-                            "✓ Note down helpline numbers: 1950",
-                            "✓ Plan transportation to polling station",
-                            "✓ Keep disability certificate and ID proof ready",
-                            "✓ Request Braille voter slip if needed",
+                            "Verify your name is in the electoral roll (check on NVSP)",
+                            "Check your polling station location and accessibility",
+                            "Apply for postal ballot if eligible (at least 7 days in advance)",
+                            "Arrange a companion if needed and inform them about the process",
+                            "Note down helpline numbers: 1950",
+                            "Plan transportation to polling station",
+                            "Keep disability certificate and ID proof ready",
+                            "Request Braille voter slip if needed",
                         ],
                     },
                 ],
@@ -260,7 +260,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "physical",
         name: "Physical Disabilities",
-        icon: "♿",
+        icon: "",
         description: "For persons with locomotor disability, wheelchair users, limb impairment, cerebral palsy",
         subcategories: [
             "Locomotor disability",
@@ -417,12 +417,12 @@ export const disabilityCategories: DisabilityCategory[] = [
                     {
                         title: "Preparation",
                         items: [
-                            "✓ Verify electoral roll",
-                            "✓ Check polling station accessibility",
-                            "✓ Apply for postal ballot if needed",
-                            "✓ Arrange companion if required",
-                            "✓ Plan accessible transport",
-                            "✓ Keep documents ready",
+                            "Verify electoral roll",
+                            "Check polling station accessibility",
+                            "Apply for postal ballot if needed",
+                            "Arrange companion if required",
+                            "Plan accessible transport",
+                            "Keep documents ready",
                         ],
                     },
                 ],
@@ -447,7 +447,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "hearing",
         name: "Hearing Impairment / Deafness",
-        icon: "👂",
+        icon: "",
         description: "For persons with complete deafness or hard of hearing",
         info: {
             registration: {
@@ -524,7 +524,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "speech",
         name: "Speech and Language Disability",
-        icon: "🗣️",
+        icon: "",
         description: "For persons with speech impairment or communication disorders",
         info: {
             registration: {
@@ -576,7 +576,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "intellectual",
         name: "Intellectual Disabilities",
-        icon: "🧠",
+        icon: "",
         description: "For persons with learning disabilities or specific learning disabilities",
         info: {
             registration: {
@@ -635,7 +635,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "mental",
         name: "Mental Health Conditions",
-        icon: "💭",
+        icon: "",
         description: "For persons with mental illness or chronic neurological conditions",
         info: {
             registration: {
@@ -688,7 +688,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "multiple",
         name: "Multiple Disabilities",
-        icon: "🤝",
+        icon: "",
         description: "For persons with combination of two or more disabilities",
         info: {
             registration: {
@@ -748,7 +748,7 @@ export const disabilityCategories: DisabilityCategory[] = [
     {
         id: "age-related",
         name: "Age-Related Disabilities",
-        icon: "👴",
+        icon: "",
         description: "For senior citizens with mobility issues or age-related impairments",
         info: {
             registration: {

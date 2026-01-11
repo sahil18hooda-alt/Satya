@@ -8,7 +8,10 @@ const LANGUAGES = [
     "Sindhi", "Tamil", "Telugu", "Urdu"
 ];
 
+import { useTabs, NewsSubTabType } from "@/contexts/TabContext";
+
 export function ElectionNews() {
+    const { newsSubTab: subTab } = useTabs();
     const [language, setLanguage] = useState("English");
     const [news, setNews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,7 +45,7 @@ export function ElectionNews() {
     return (
         <div className="w-full max-w-6xl mx-auto space-y-8">
             <div className="flex flex-col md:flex-row items-end justify-between gap-6">
-                <div className="text-left">
+                <div id="news-newsroom" className={`text-left transition-all p-2 ${subTab === 'newsroom' ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
                     <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Election Newsroom</h2>
                     <p className="text-slate-500">Latest updates, official announcements, and poll analysis.</p>
                 </div>

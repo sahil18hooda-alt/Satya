@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Noto_Sans, Mukta } from "next/font/google"; // Import standard Google Fonts
 import "./globals.css";
 import { SatyaHeader } from "@/components/SatyaHeader";
+import { GovFooter } from "@/components/GovFooter";
+import { AccessibilityWrapper } from "@/components/AccessibilityWrapper";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { TabProvider } from "@/contexts/TabContext";
 
@@ -32,8 +34,16 @@ export default function RootLayout({
       <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased bg-[#fbfaf9]`}>
         <LanguageProvider>
           <TabProvider>
-            <SatyaHeader />
-            {children}
+            <AccessibilityWrapper>
+              <noscript>
+                <div className="bg-red-600 text-white p-4 text-center font-bold">
+                  JavaScript is disabled in your browser. Some features of the S.A.T.Y.A portal (AI verification, Voice, Contrast mode) require JavaScript to function.
+                </div>
+              </noscript>
+              <SatyaHeader />
+              {children}
+              <GovFooter />
+            </AccessibilityWrapper>
           </TabProvider>
         </LanguageProvider>
       </body>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Image as ImageIcon, Link as LinkIcon, Lock, Loader2, UploadCloud, FileText, Camera } from "lucide-react";
 import { useTabs } from "@/contexts/TabContext";
+import { Captcha } from "./Captcha";
 
 interface VerificationTabsProps {
     onVerify: (type: 'text' | 'image' | 'url', content: string | File) => void;
@@ -18,6 +19,8 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
     const [urlInput, setUrlInput] = useState("");
     const [fileInput, setFileInput] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+    const { isHighContrast } = useTabs();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -175,25 +178,33 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Lock className="w-3 h-3" />
-                    Your search is anonymous and secure.
+            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <Lock className="w-3 h-3" />
+                        Your search is anonymous and secure.
+                    </div>
                 </div>
 
-                <button
-                    onClick={handleVerify}
-                    disabled={isAnalyzing || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
-                    className="bg-[#1e3a8a] text-white px-8 py-3 rounded-none font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                    {isAnalyzing ? (
-                        <>
-                            <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
-                        </>
-                    ) : (
-                        "Verify Now"
-                    )}
-                </button>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                    <div className="flex-1 w-full">
+                        <Captcha onVerify={setIsCaptchaVerified} isHighContrast={isHighContrast} />
+                    </div>
+
+                    <button
+                        onClick={handleVerify}
+                        disabled={isAnalyzing || !isCaptchaVerified || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
+                        className="w-full md:w-auto bg-[#1e3a8a] text-white px-8 py-3 rounded-none font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                        {isAnalyzing ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                            </>
+                        ) : (
+                            "Verify Now"
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );

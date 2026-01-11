@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Banknote, Building2, Train, GraduationCap, Syringe, Scale, Calendar, ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
 
+import { useTabs } from "@/contexts/TabContext";
+
 // --- Types & Data ---
 
 interface DevelopmentItem {
@@ -22,7 +24,7 @@ const DEV_ITEMS: DevelopmentItem[] = [
 ];
 
 export function DemocracyDividend() {
-    const [activeSection, setActiveSection] = useState<"receipt" | "budget" | "scale" | "mcc">("receipt");
+    const { dividendSubTab: activeSection, setDividendSubTab: setActiveSection } = useTabs();
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8 p-4">

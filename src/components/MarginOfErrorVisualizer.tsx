@@ -18,7 +18,10 @@ interface ElectionResult {
     totalVoted: number;
 }
 
+import { useTabs, MarginSubTabType } from "@/contexts/TabContext";
+
 export function MarginOfErrorVisualizer() {
+    const { marginSubTab: subTab } = useTabs();
     const [selectedId, setSelectedId] = useState(electionData[0].id);
     const [simulationPercent, setSimulationPercent] = useState(0);
 
@@ -69,7 +72,7 @@ export function MarginOfErrorVisualizer() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
 
                 {/* Left: Data Journalism Piece */}
-                <div className="lg:col-span-12 xl:col-span-4 space-y-6">
+                <div id="margin-reality" className={`lg:col-span-12 xl:col-span-4 space-y-6 transition-all ${subTab === 'reality' ? 'ring-2 ring-[#13316c] ring-offset-2' : ''}`}>
                     <div className="bg-[#13316c] text-white p-6 rounded-none shadow-xl">
                         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <Info className="w-5 h-5 opacity-70" />
@@ -189,7 +192,7 @@ export function MarginOfErrorVisualizer() {
                     </div>
 
                     {/* Slider Control */}
-                    <div className="bg-white border-2 border-slate-100 p-8 rounded-none shadow-sm">
+                    <div id="margin-simulator" className={`bg-white border-2 p-8 rounded-none shadow-sm transition-all ${subTab === 'simulator' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}>
                         <div className="flex justify-between items-center mb-6">
                             <span className="font-bold text-slate-700 flex items-center gap-2">
                                 <Users className="w-5 h-5 text-blue-500" />

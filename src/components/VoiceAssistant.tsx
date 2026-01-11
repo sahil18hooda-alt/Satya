@@ -10,7 +10,10 @@ interface Message {
     timestamp: Date;
 }
 
+import { useTabs, VoiceSubTabType } from "@/contexts/TabContext";
+
 export function VoiceAssistant() {
+    const { voiceSubTab: subTab } = useTabs();
     const [isRecording, setIsRecording] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -159,7 +162,7 @@ export function VoiceAssistant() {
             </div>
 
             {/* Voice Control */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-none p-8 border-2 border-blue-100">
+            <div id="voice-control" className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-none p-8 border-2 transition-all ${subTab === 'assistant' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-blue-100'}`}>
                 <div className="flex flex-col items-center space-y-6">
                     {/* Microphone Button */}
                     <motion.button
@@ -255,7 +258,7 @@ export function VoiceAssistant() {
             )}
 
             {/* Instructions */}
-            <div className="bg-slate-50 rounded-none p-4 text-sm text-slate-600">
+            <div id="voice-instructions" className={`bg-slate-50 rounded-none p-4 text-sm text-slate-600 transition-all ${subTab === 'upload' ? 'bg-orange-50 border border-orange-200' : ''}`}>
                 <p className="font-semibold mb-2">How to use:</p>
                 <ul className="list-disc list-inside space-y-1">
                     <li>Click the microphone to start speaking</li>

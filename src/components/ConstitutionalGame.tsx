@@ -33,12 +33,18 @@ const INITIAL_METRICS: GameMetrics = {
     federalism: 50,
 };
 
+import { useTabs } from "@/contexts/TabContext";
+
 // --- Game Engine Logic ---
 
 export function ConstitutionalGame() {
+    const { gameSubTab, setGameSubTab } = useTabs();
     const [phase, setPhase] = useState<GamePhase>("SETUP");
     const [year, setYear] = useState(1);
-    const [model, setModel] = useState<ElectionModel | null>(null);
+
+    const model = gameSubTab;
+    const setModel = (m: ElectionModel | null) => setGameSubTab(m as any);
+
     const [metrics, setMetrics] = useState<GameMetrics>(INITIAL_METRICS);
     const [currentEvent, setCurrentEvent] = useState<GameEvent | null>(null);
     const [newsTicker, setNewsTicker] = useState<string[]>([]);

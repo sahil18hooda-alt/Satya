@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Download, Share2, ArrowLeft, Phone, Mail, ExternalLink } from "lucide-react";
+import { useTabs } from "@/contexts/TabContext";
 import { disabilityCategories, DisabilityCategory, Section } from "@/data/accessibilityContent";
 
 export function AccessibilityAssistant() {
-    const [selectedCategory, setSelectedCategory] = useState<DisabilityCategory | null>(null);
+    const { accessibilitySubTab, setAccessibilitySubTab } = useTabs();
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+
+    const selectedCategory = disabilityCategories.find(c => c.id === accessibilitySubTab) || null;
+    const setSelectedCategory = (category: DisabilityCategory | null) => {
+        setAccessibilitySubTab(category ? category.id as any : null);
+    };
 
     const toggleSection = (sectionKey: string) => {
         const newExpanded = new Set(expandedSections);
@@ -53,18 +59,21 @@ export function AccessibilityAssistant() {
 
                 {/* Category Selection Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {disabilityCategories.map((category) => (
+                    {disabilityCategories.map((category, index) => (
                         <motion.button
                             key={category.id}
                             onClick={() => setSelectedCategory(category)}
-                            className="bg-white border-2 border-slate-200 rounded-none p-6 text-left hover:border-blue-500 hover:shadow-lg transition-all group"
+                            className="bg-white border-2 border-slate-200 rounded-none p-6 text-left hover:border-blue-500 hover:shadow-lg transition-all group relative"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             aria-label={`Select ${category.name}`}
                         >
+                            <div className="absolute top-4 right-4 text-slate-300 font-black text-2xl group-hover:text-blue-100 transition-colors">
+                                {String(index + 1).padStart(2, '0')}
+                            </div>
                             <div className="text-5xl mb-4">{category.icon}</div>
                             <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600">
-                                {category.name}
+                                {index + 1}. {category.name}
                             </h3>
                             <p className="text-sm text-slate-600">{category.description}</p>
                         </motion.button>
@@ -73,7 +82,7 @@ export function AccessibilityAssistant() {
 
                 {/* Important Notice */}
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-none p-6">
-                    <h3 className="text-lg font-bold text-blue-900 mb-2">📞 Need Immediate Help?</h3>
+                    <h3 className="text-lg font-bold text-blue-900 mb-2">Need Immediate Help?</h3>
                     <p className="text-blue-800 mb-3">
                         National Voters' Helpline: <strong className="text-2xl">1950</strong> (Toll-Free)
                     </p>
@@ -124,13 +133,13 @@ export function AccessibilityAssistant() {
                                         <h4 className="font-bold text-lg text-slate-900 mb-2">
                                             {subsection.title}
                                         </h4>
-                                        <ul className="list-disc list-inside space-y-2 ml-2">
+                                        <ol className="list-decimal list-outside space-y-2 pl-5">
                                             {subsection.items.map((item, itemIdx) => (
-                                                <li key={itemIdx} className="text-slate-700 leading-relaxed">
-                                                    {item}
+                                                <li key={itemIdx} className="text-slate-700 leading-relaxed pl-1">
+                                                    {item.startsWith("- ") ? item.substring(2) : item}
                                                 </li>
                                             ))}
-                                        </ul>
+                                        </ol>
                                     </div>
                                 ))}
                             </div>
@@ -195,21 +204,21 @@ export function AccessibilityAssistant() {
 
             {/* Information Sections */}
             <div className="bg-white rounded-none border-2 border-slate-200 overflow-hidden">
-                {renderSection("📝 Registration & Documentation", selectedCategory.info.registration, "registration")}
-                {renderSection("🏢 Voting Facilities at Polling Stations", selectedCategory.info.pollingFacilities, "facilities")}
-                {renderSection("🤝 Companion/Assistant Rights", selectedCategory.info.companionRights, "companion")}
-                {renderSection("📮 Postal Ballot Facility", selectedCategory.info.postalBallot, "postal")}
-                {renderSection("📞 Helpline & Support Services", selectedCategory.info.helplines, "helplines")}
-                {renderSection("✨ Special Provisions & Rights", selectedCategory.info.specialProvisions, "provisions")}
-                {renderSection("🏛️ Recent Government Initiatives", selectedCategory.info.governmentInitiatives, "initiatives")}
-                {renderSection("⚖️ Know Your Rights", selectedCategory.info.yourRights, "rights")}
-                {renderSection("✅ Pre-Election Checklist", selectedCategory.info.preElectionChecklist, "checklist")}
-                {renderSection("📧 Contact & Support", selectedCategory.info.contacts, "contacts")}
+                {renderSection("Registration & Documentation", selectedCategory.info.registration, "registration")}
+                {renderSection("Voting Facilities at Polling Stations", selectedCategory.info.pollingFacilities, "facilities")}
+                {renderSection("Companion/Assistant Rights", selectedCategory.info.companionRights, "companion")}
+                {renderSection("Postal Ballot Facility", selectedCategory.info.postalBallot, "postal")}
+                {renderSection("Helpline & Support Services", selectedCategory.info.helplines, "helplines")}
+                {renderSection("Special Provisions & Rights", selectedCategory.info.specialProvisions, "provisions")}
+                {renderSection("Recent Government Initiatives", selectedCategory.info.governmentInitiatives, "initiatives")}
+                {renderSection("Know Your Rights", selectedCategory.info.yourRights, "rights")}
+                {renderSection("Pre-Election Checklist", selectedCategory.info.preElectionChecklist, "checklist")}
+                {renderSection("Contact & Support", selectedCategory.info.contacts, "contacts")}
             </div>
 
             {/* Quick Contact Card */}
             <div className="bg-green-50 border-2 border-green-200 rounded-none p-6">
-                <h3 className="text-lg font-bold text-green-900 mb-4">🆘 Quick Contact Information</h3>
+                <h3 className="text-lg font-bold text-green-900 mb-4">Quick Contact Information</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                         <Phone className="w-5 h-5 text-green-700" />
