@@ -3,19 +3,23 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type TabType = 'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news' | 'margin';
+type RumorSubTabType = 'text' | 'image' | 'screenshot';
 
 interface TabContextType {
     activeTab: TabType;
     setActiveTab: (tab: TabType) => void;
+    rumorSubTab: RumorSubTabType;
+    setRumorSubTab: (tab: RumorSubTabType) => void;
 }
 
 const TabContext = createContext<TabContextType | undefined>(undefined);
 
 export function TabProvider({ children }: { children: ReactNode }) {
     const [activeTab, setActiveTab] = useState<TabType>('rumor');
+    const [rumorSubTab, setRumorSubTab] = useState<RumorSubTabType>('text');
 
     return (
-        <TabContext.Provider value={{ activeTab, setActiveTab }}>
+        <TabContext.Provider value={{ activeTab, setActiveTab, rumorSubTab, setRumorSubTab }}>
             {children}
         </TabContext.Provider>
     );

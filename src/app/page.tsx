@@ -83,7 +83,7 @@ export default function Home() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
   /* New Verify Handler */
-  const handleVerifyRequest = async (type: 'text' | 'image' | 'url', content: string | File) => {
+  const handleVerifyRequest = async (type: 'text' | 'image' | 'screenshot', content: string | File) => {
     setIsAnalyzing(true);
     setResult(null);
     try {
@@ -95,9 +95,9 @@ export default function Home() {
       let body: any;
       let headers: any = { "Content-Type": "application/json" };
 
-      if (type === 'text' || type === 'url') {
+      if (type === 'text') {
         body = JSON.stringify({ text: content });
-      } else if (type === 'image') {
+      } else if (type === 'image' || type === 'screenshot') {
         endpoint = "/analyze-image";
         const formData = new FormData();
         formData.append("file", content as File);

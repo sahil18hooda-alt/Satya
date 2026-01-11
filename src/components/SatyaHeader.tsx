@@ -4,9 +4,10 @@ import { Search, Bell, Twitter, Facebook, Linkedin, Youtube, Instagram, MessageC
 import { LanguageSelector } from "./LanguageSelector";
 import Link from "next/link";
 import { useTabs } from "@/contexts/TabContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function SatyaHeader() {
-    const { activeTab, setActiveTab } = useTabs();
+    const { activeTab, setActiveTab, rumorSubTab, setRumorSubTab } = useTabs();
 
     const navItems = [
         { id: 'rumor', label: 'Rumor Buster' },
@@ -18,6 +19,12 @@ export function SatyaHeader() {
         { id: 'dividend', label: 'Democracy Dividend' },
         { id: 'news', label: 'Election News' },
         { id: 'margin', label: 'Margin of Error' },
+    ];
+
+    const rumorSubItems = [
+        { id: 'text', label: 'Text' },
+        { id: 'image', label: 'Image' },
+        { id: 'screenshot', label: 'Screenshot' },
     ];
 
     return (
@@ -70,6 +77,36 @@ export function SatyaHeader() {
                     </div>
                 </div>
             </nav>
+
+            {/* Secondary Sub-Bar: ONLY for Rumor Buster */}
+            <AnimatePresence>
+                {activeTab === 'rumor' && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="bg-gray-100 border-b border-gray-200 overflow-hidden"
+                    >
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 py-2">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest border-r pr-6 border-gray-300">
+                                Verify via:
+                            </span>
+                            {rumorSubItems.map((sub) => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setRumorSubTab(sub.id as any)}
+                                    className={`text-sm font-semibold transition-colors px-3 py-1 rounded-none ${rumorSubTab === sub.id
+                                            ? 'text-[#003366] bg-white shadow-sm border border-gray-200'
+                                            : 'text-gray-600 hover:text-[#003366]'
+                                        }`}
+                                >
+                                    {sub.label}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </header>
     );
 }
