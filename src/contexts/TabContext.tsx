@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type TabType = 'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news' | 'margin';
-type RumorSubTabType = 'text' | 'image' | 'screenshot';
+type RumorSubTabType = 'text' | 'image' | 'url';
 
 interface TabContextType {
     activeTab: TabType;

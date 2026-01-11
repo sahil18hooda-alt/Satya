@@ -6,7 +6,7 @@ import { Copy, Image as ImageIcon, Link as LinkIcon, Lock, Loader2, UploadCloud,
 import { useTabs } from "@/contexts/TabContext";
 
 interface VerificationTabsProps {
-    onVerify: (type: 'text' | 'image' | 'screenshot', content: string | File) => void;
+    onVerify: (type: 'text' | 'image' | 'url', content: string | File) => void;
     isAnalyzing: boolean;
 }
 
@@ -45,8 +45,8 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
             onVerify('text', textInput);
         } else if (activeTab === 'image' && fileInput) {
             onVerify('image', fileInput);
-        } else if (activeTab === 'screenshot' && fileInput) {
-            onVerify('screenshot', fileInput);
+        } else if (activeTab === 'url' && urlInput.trim()) {
+            onVerify('url', urlInput);
         }
     };
 
@@ -75,14 +75,14 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                     {activeTab === 'image' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
                 <button
-                    onClick={() => setActiveTab('screenshot')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all relative ${activeTab === 'screenshot'
+                    onClick={() => setActiveTab('url')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all relative ${activeTab === 'url'
                         ? 'text-[#13316c]'
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
-                    <Camera className="w-4 h-4" /> Screenshot
-                    {activeTab === 'screenshot' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
+                    <LinkIcon className="w-4 h-4" /> URL
+                    {activeTab === 'url' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
             </div>
             {/* Content Area */}
@@ -150,37 +150,24 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         </motion.div>
                     )}
 
-                    {activeTab === 'screenshot' && (
+                    {activeTab === 'url' && (
                         <motion.div
-                            key="screenshot"
+                            key="url"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 10 }}
                             transition={{ duration: 0.2 }}
-                            className="h-full"
+                            className="h-full flex items-center"
                         >
-                            <div
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                                className="w-full h-48 border-2 border-dashed border-[#13316c] rounded-none bg-blue-50/20 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50/30 transition-colors relative overflow-hidden"
-                            >
-                                {!fileInput ? (
-                                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                                        <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                                        <Camera className="w-10 h-10 text-[#13316c] mb-3" />
-                                        <span className="text-sm font-medium text-[#13316c]">Click to upload or Drag & Drop Screenshot from WhatsApp/News</span>
-                                    </label>
-                                ) : (
-                                    <div className="relative w-full h-full flex items-center justify-center p-2">
-                                        <img src={previewUrl!} alt="Preview" className="max-h-full max-w-full rounded-none object-contain shadow-sm" />
-                                        <button
-                                            onClick={() => { setFileInput(null); setPreviewUrl(null); }}
-                                            className="absolute top-2 right-2 bg-black/50 text-white rounded-none p-1 hover:bg-black/70"
-                                        >
-                                            x
-                                        </button>
-                                    </div>
-                                )}
+                            <div className="w-full relative">
+                                <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                                <input
+                                    type="url"
+                                    value={urlInput}
+                                    onChange={(e) => setUrlInput(e.target.value)}
+                                    placeholder="Paste the suspicious link here for context verification..."
+                                    className="w-full pl-12 pr-4 py-4 bg-muted/20 border-2 border-dashed border-muted rounded-none focus:outline-none focus:border-blue-300 focus:bg-blue-50/20 transition-all text-sm"
+                                />
                             </div>
                         </motion.div>
                     )}
@@ -196,7 +183,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
 
                 <button
                     onClick={handleVerify}
-                    disabled={isAnalyzing || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'screenshot' && !fileInput)}
+                    disabled={isAnalyzing || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
                     className="bg-[#1e3a8a] text-white px-8 py-3 rounded-none font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     {isAnalyzing ? (

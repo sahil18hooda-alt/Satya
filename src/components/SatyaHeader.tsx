@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, Bell, Twitter, Facebook, Linkedin, Youtube, Instagram, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { Search, ChevronDown } from "lucide-react";
 import { LanguageSelector } from "./LanguageSelector";
 import Link from "next/link";
 import { useTabs } from "@/contexts/TabContext";
@@ -8,9 +9,18 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function SatyaHeader() {
     const { activeTab, setActiveTab, rumorSubTab, setRumorSubTab } = useTabs();
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
     const navItems = [
-        { id: 'rumor', label: 'Rumor Buster' },
+        {
+            id: 'rumor',
+            label: 'Rumor Buster',
+            subItems: [
+                { id: 'text', label: 'Text' },
+                { id: 'image', label: 'Image' },
+                { id: 'url', label: 'URL' },
+            ]
+        },
         { id: 'logic', label: 'Logic Layer' },
         { id: 'deepfake', label: 'Deepfake Detective' },
         { id: 'voice', label: 'Voice AI' },
@@ -21,14 +31,8 @@ export function SatyaHeader() {
         { id: 'margin', label: 'Margin of Error' },
     ];
 
-    const rumorSubItems = [
-        { id: 'text', label: 'Text' },
-        { id: 'image', label: 'Image' },
-        { id: 'screenshot', label: 'Screenshot' },
-    ];
-
     return (
-        <header className="sticky top-0 z-50 bg-white shadow-sm">
+        <header className="sticky top-0 z-50 bg-white shadow-sm font-mukta">
             {/* Top Bar: MeitY Style Branding */}
             <div className="bg-white border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
@@ -58,55 +62,58 @@ export function SatyaHeader() {
                 </div>
             </div>
 
-            {/* Bottom Bar: Horizontal Sub-Navigation */}
-            <nav className="bg-[#003366] text-white">
+            {/* Bottom Bar: Horizontal Sub-Navigation with Dropdowns */}
+            <nav className="bg-[#003366] text-white overflow-visible">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center overflow-x-auto no-scrollbar">
+                    <div className="flex items-center no-scrollbar">
                         {navItems.map((item) => (
-                            <button
+                            <div
                                 key={item.id}
-                                onClick={() => setActiveTab(item.id as any)}
-                                className={`px-5 py-3 text-sm font-bold whitespace-nowrap transition-all border-b-4 hover:bg-white/10 ${activeTab === item.id
-                                    ? 'border-white bg-white/20'
-                                    : 'border-transparent'
-                                    }`}
+                                className="relative group"
+                                onMouseEnter={() => setOpenDropdown(item.id)}
+                                onMouseLeave={() => setOpenDropdown(null)}
                             >
-                                {item.label}
-                            </button>
+                                <button
+                                    onClick={() => setActiveTab(item.id as any)}
+                                    className={`flex items-center gap-1 px-5 py-3 text-sm font-bold whitespace-nowrap transition-all border-b-4 hover:bg-white/10 ${activeTab === item.id
+                                        ? 'border-white bg-white/20'
+                                        : 'border-transparent'
+                                        }`}
+                                >
+                                    {item.label}
+                                    {item.subItems && <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === item.id ? 'rotate-180' : ''}`} />}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <AnimatePresence>
+                                    {item.subItems && openDropdown === item.id && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute top-full left-0 bg-white text-gray-800 shadow-xl rounded-none border border-gray-200 py-1 min-w-[160px] z-[100]"
+                                        >
+                                            {item.subItems.map((sub) => (
+                                                <button
+                                                    key={sub.id}
+                                                    onClick={() => {
+                                                        setActiveTab(item.id as any);
+                                                        setRumorSubTab(sub.id as any);
+                                                        setOpenDropdown(null);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 hover:text-[#003366] transition-colors border-l-4 ${rumorSubTab === sub.id && activeTab === item.id ? 'border-[#003366] bg-gray-50 text-[#003366]' : 'border-transparent'}`}
+                                                >
+                                                    {sub.label}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         ))}
                     </div>
                 </div>
             </nav>
-
-            {/* Secondary Sub-Bar: ONLY for Rumor Buster */}
-            <AnimatePresence>
-                {activeTab === 'rumor' && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="bg-gray-100 border-b border-gray-200 overflow-hidden"
-                    >
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 py-2">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest border-r pr-6 border-gray-300">
-                                Verify via:
-                            </span>
-                            {rumorSubItems.map((sub) => (
-                                <button
-                                    key={sub.id}
-                                    onClick={() => setRumorSubTab(sub.id as any)}
-                                    className={`text-sm font-semibold transition-colors px-3 py-1 rounded-none ${rumorSubTab === sub.id
-                                            ? 'text-[#003366] bg-white shadow-sm border border-gray-200'
-                                            : 'text-gray-600 hover:text-[#003366]'
-                                        }`}
-                                >
-                                    {sub.label}
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </header>
     );
 }
