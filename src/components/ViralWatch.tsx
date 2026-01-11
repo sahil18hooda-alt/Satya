@@ -24,7 +24,11 @@ const MYTHS = [
     },
 ];
 
-export function ViralWatch() {
+interface ViralWatchProps {
+    onMythClick?: (title: string) => void;
+}
+
+export function ViralWatch({ onMythClick }: ViralWatchProps) {
     return (
         <div className="bg-white border text-card-foreground rounded-none shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
@@ -42,7 +46,11 @@ export function ViralWatch() {
 
             <div className="space-y-4">
                 {MYTHS.map((myth, i) => (
-                    <div key={i} className="border rounded-none p-4 hover:bg-muted/30 transition-colors">
+                    <div
+                        key={i}
+                        onClick={() => onMythClick?.(myth.title)}
+                        className="border rounded-none p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                    >
                         <div className="flex justify-between items-start mb-2">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-none ${myth.tagColor}`}>
                                 {myth.tag}

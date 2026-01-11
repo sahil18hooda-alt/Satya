@@ -294,7 +294,11 @@ export default function Home() {
               {/* Right Column (Stats & Trends) - Order 1 on Mobile, Order 2 on Desktop */}
               <div className="space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
                 <StatsCard />
-                <ViralWatch />
+                <ViralWatch onMythClick={(title) => {
+                  setQuery(title);
+                  handleVerifyRequest('text', title);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} />
               </div>
 
             </div>
