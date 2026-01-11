@@ -14,11 +14,11 @@ import { ElectionNews } from "@/components/ElectionNews";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
 import { AccessibilityAssistant } from "@/components/AccessibilityAssistant";
 import { MarginOfErrorVisualizer } from "@/components/MarginOfErrorVisualizer";
-import PillNav from "@/components/PillNav";
+import { useTabs } from "@/contexts/TabContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'rumor' | 'logic' | 'deepfake' | 'voice' | 'accessibility' | 'game' | 'dividend' | 'news' | 'margin'>('rumor');
+  const { activeTab, setActiveTab } = useTabs();
 
   // Rumor Buster State
   const [query, setQuery] = useState("");
@@ -219,40 +219,17 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center pb-20 transition-colors">
-      <section className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-12 space-y-6">
+      <section className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-12 space-y-6">
 
-        {/* Header Section */}
-        <div className="text-left mb-8 md:mb-12">
-          {/* Tag Removed or Updated to Minimal */}
-
-          <h1 className="text-5xl md:text-7xl font-bold text-[#1f242e] mb-6 tracking-tight leading-[1.1]">
-            {headlinePart1} <span className="text-[#f97316] font-extrabold">Without</span> <span className="text-[#16a34a] font-extrabold">Checking.</span>
+        {/* Header Section - MeitY Style Alignment */}
+        <div className="text-left mb-8">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-[#1f242e] mb-4 tracking-tight leading-tight">
+            {headlinePart1} <span className="text-[#f97316]">Without</span> <span className="text-[#16a34a]">Checking.</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-500 max-w-2xl leading-relaxed">
+          <p className="text-base md:text-lg text-gray-500 max-w-3xl leading-relaxed">
             {subtext}
           </p>
         </div>
-
-        {/* Navigation Tabs (PillNav GSAP Integration) */}
-        <PillNav
-          logo="/emblem.png"
-          logoAlt="SATYA Logo"
-          activeHref={activeTab}
-          items={[
-            { id: 'rumor', label: 'Rumor Buster', href: 'rumor', onClick: () => setActiveTab('rumor') },
-            { id: 'logic', label: 'Logic Layer', href: 'logic', onClick: () => setActiveTab('logic') },
-            { id: 'deepfake', label: 'Deepfake', href: 'deepfake', onClick: () => setActiveTab('deepfake') },
-            { id: 'voice', label: 'Voice AI', href: 'voice', onClick: () => setActiveTab('voice') },
-            { id: 'accessibility', label: 'Accessibility', href: 'accessibility', onClick: () => setActiveTab('accessibility') },
-            { id: 'game', label: 'Civic Game', href: 'game', onClick: () => setActiveTab('game') },
-            { id: 'dividend', label: 'Dividend', href: 'dividend', onClick: () => setActiveTab('dividend') },
-            { id: 'news', label: 'News', href: 'news', onClick: () => setActiveTab('news') },
-            { id: 'margin', label: 'Margin', href: 'margin', onClick: () => setActiveTab('margin') },
-          ]}
-          baseColor="#13316c"
-          pillColor="#fff"
-          className="mb-12"
-        />
 
         {
           activeTab === 'rumor' ? (

@@ -3,6 +3,7 @@ import { Noto_Sans, Mukta } from "next/font/google"; // Import standard Google F
 import "./globals.css";
 import { SatyaHeader } from "@/components/SatyaHeader";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { TabProvider } from "@/contexts/TabContext";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -30,8 +31,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased bg-[#fbfaf9]`}>
         <LanguageProvider>
-          <SatyaHeader />
-          {children}
+          <TabProvider>
+            <SatyaHeader />
+            {children}
+          </TabProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -3,70 +3,73 @@
 import { Search, Bell, Twitter, Facebook, Linkedin, Youtube, Instagram, MessageCircle } from "lucide-react";
 import { LanguageSelector } from "./LanguageSelector";
 import Link from "next/link";
+import { useTabs } from "@/contexts/TabContext";
 
 export function SatyaHeader() {
+    const { activeTab, setActiveTab } = useTabs();
+
+    const navItems = [
+        { id: 'rumor', label: 'Rumor Buster' },
+        { id: 'logic', label: 'Logic Layer' },
+        { id: 'deepfake', label: 'Deepfake Detective' },
+        { id: 'voice', label: 'Voice AI' },
+        { id: 'accessibility', label: 'Accessibility' },
+        { id: 'game', label: 'Civic Game' },
+        { id: 'dividend', label: 'Democracy Dividend' },
+        { id: 'news', label: 'Election News' },
+        { id: 'margin', label: 'Margin of Error' },
+    ];
+
     return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-
-                {/* Left: Branding Section */}
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="flex items-center gap-3">
-                        <img src="/emblem.png" alt="Emblem" className="h-12 w-auto object-contain" />
-                        <div className="flex flex-col">
-                            <h1 className="text-[#003366] font-extrabold text-xl md:text-2xl leading-tight tracking-tight">
-                                S.A.T.Y.A verify
-                            </h1>
-                            <p className="text-gray-600 text-[10px] md:text-sm font-medium leading-none">
-                                Government of India
-                            </p>
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Right: Social, Search, Action Section */}
-                <div className="hidden lg:flex items-center gap-6">
-                    {/* Social Icons */}
-                    <div className="flex items-center gap-3 border-r pr-6 border-gray-200">
-                        <Twitter className="w-4 h-4 text-gray-700 hover:text-blue-400 cursor-pointer" />
-                        <MessageCircle className="w-4 h-4 text-green-600 hover:text-green-700 cursor-pointer" />
-                        <Facebook className="w-4 h-4 text-blue-700 hover:text-blue-800 cursor-pointer" />
-                        <Linkedin className="w-4 h-4 text-blue-600 hover:text-blue-700 cursor-pointer" />
-                        <Youtube className="w-4 h-4 text-red-600 hover:text-red-700 cursor-pointer" />
-                        <div className="w-4 h-4 bg-black rounded-none flex items-center justify-center p-0.5">
-                            <span className="text-[8px] text-white font-bold">X</span>
-                        </div>
-                        <Instagram className="w-4 h-4 text-pink-600 hover:text-pink-700 cursor-pointer" />
+        <header className="sticky top-0 z-50 bg-white shadow-sm">
+            {/* Top Bar: MeitY Style Branding */}
+            <div className="bg-white border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                    {/* Left: Branding Section */}
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="flex items-center gap-4">
+                            <img src="/emblem.png" alt="Emblem" className="h-14 w-auto object-contain" />
+                            <div className="flex flex-col border-l pl-4 border-gray-200">
+                                <span className="text-gray-600 text-[10px] md:text-sm font-semibold leading-none mb-1 uppercase tracking-tight">
+                                    Government of India
+                                </span>
+                                <h1 className="text-[#003366] font-extrabold text-xl md:text-3xl leading-tight tracking-tight">
+                                    Ministry of Electronics and Information Technology
+                                </h1>
+                            </div>
+                        </Link>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search"
-                            className="pl-4 pr-10 py-1.5 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-[#003366] w-64"
-                        />
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
+                    {/* Right: Digital India & Quick Actions */}
+                    <div className="hidden lg:flex items-center gap-8">
+                        <img src="https://www.meity.gov.in/writereaddata/files/digital-india-logo.png" alt="Digital India" className="h-10 w-auto opacity-80" />
+                        <div className="flex items-center gap-4 border-l pl-8 border-gray-200">
+                            <Search className="w-5 h-5 text-[#003366] cursor-pointer" />
+                            <LanguageSelector />
+                        </div>
                     </div>
-
-                    {/* Action Button */}
-                    <button className="bg-[#e43c12] text-white px-4 py-1.5 text-sm font-bold flex items-center gap-2 rounded-none hover:bg-[#c93510] transition-colors whitespace-nowrap">
-                        <Bell className="w-4 h-4" />
-                        What's New
-                    </button>
-
-                    <LanguageSelector />
                 </div>
-
-                {/* Mobile Menu (Simplified) */}
-                <div className="lg:hidden flex items-center gap-2">
-                    <LanguageSelector />
-                    <button className="bg-[#e43c12] p-2 text-white rounded-none">
-                        <Bell className="w-5 h-5" />
-                    </button>
-                </div>
-
             </div>
+
+            {/* Bottom Bar: Horizontal Sub-Navigation */}
+            <nav className="bg-[#003366] text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center overflow-x-auto no-scrollbar">
+                        {navItems.map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id as any)}
+                                className={`px-5 py-3 text-sm font-bold whitespace-nowrap transition-all border-b-4 hover:bg-white/10 ${activeTab === item.id
+                                        ? 'border-white bg-white/20'
+                                        : 'border-transparent'
+                                    }`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </nav>
         </header>
     );
 }
