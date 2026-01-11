@@ -3,14 +3,5 @@
     "outputDirectory": ".next",
     "devCommand": "npm run dev",
     "installCommand": "npm install",
-    "framework": "nextjs",
-    "functions": {
-        "api/**/*.py": {
-            "runtime": "@vercel/python",
-            "maxDuration": 10,
-            "memory": 1024,
-            "includeFiles": "api/**"
-        }
-    },
-    "ignoreCommand": "if [ -d api ]; then exit 1; else exit 0; fi"
+    "framework": "nextjs"
 }
