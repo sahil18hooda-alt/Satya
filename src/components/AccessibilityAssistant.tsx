@@ -57,7 +57,7 @@ export function AccessibilityAssistant() {
                         <motion.button
                             key={category.id}
                             onClick={() => setSelectedCategory(category)}
-                            className="bg-white border-2 border-slate-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:shadow-lg transition-all group"
+                            className="bg-white border-2 border-slate-200 rounded-none p-6 text-left hover:border-blue-500 hover:shadow-lg transition-all group"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             aria-label={`Select ${category.name}`}
@@ -72,7 +72,7 @@ export function AccessibilityAssistant() {
                 </div>
 
                 {/* Important Notice */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6">
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-none p-6">
                     <h3 className="text-lg font-bold text-blue-900 mb-2">📞 Need Immediate Help?</h3>
                     <p className="text-blue-800 mb-3">
                         National Voters' Helpline: <strong className="text-2xl">1950</strong> (Toll-Free)
@@ -156,7 +156,7 @@ export function AccessibilityAssistant() {
                 <div className="flex gap-3">
                     <button
                         onClick={handlePrint}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-none transition-colors"
                         aria-label="Print this information"
                     >
                         <Download className="w-4 h-4" />
@@ -164,7 +164,7 @@ export function AccessibilityAssistant() {
                     </button>
                     <button
                         onClick={handleShare}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-none transition-colors"
                         aria-label="Share this information"
                     >
                         <Share2 className="w-4 h-4" />
@@ -174,7 +174,7 @@ export function AccessibilityAssistant() {
             </div>
 
             {/* Category Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-8">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-none p-8">
                 <div className="flex items-start gap-4">
                     <div className="text-6xl">{selectedCategory.icon}</div>
                     <div>
@@ -183,7 +183,7 @@ export function AccessibilityAssistant() {
                         {selectedCategory.subcategories && (
                             <div className="mt-3 flex flex-wrap gap-2">
                                 {selectedCategory.subcategories.map((sub, idx) => (
-                                    <span key={idx} className="bg-blue-500 bg-opacity-50 px-3 py-1 rounded-full text-sm">
+                                    <span key={idx} className="bg-blue-500 bg-opacity-50 px-3 py-1 rounded-none text-sm">
                                         {sub}
                                     </span>
                                 ))}
@@ -194,7 +194,7 @@ export function AccessibilityAssistant() {
             </div>
 
             {/* Information Sections */}
-            <div className="bg-white rounded-2xl border-2 border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-none border-2 border-slate-200 overflow-hidden">
                 {renderSection("📝 Registration & Documentation", selectedCategory.info.registration, "registration")}
                 {renderSection("🏢 Voting Facilities at Polling Stations", selectedCategory.info.pollingFacilities, "facilities")}
                 {renderSection("🤝 Companion/Assistant Rights", selectedCategory.info.companionRights, "companion")}
@@ -208,7 +208,7 @@ export function AccessibilityAssistant() {
             </div>
 
             {/* Quick Contact Card */}
-            <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6">
+            <div className="bg-green-50 border-2 border-green-200 rounded-none p-6">
                 <h3 className="text-lg font-bold text-green-900 mb-4">🆘 Quick Contact Information</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">

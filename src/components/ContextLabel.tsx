@@ -8,7 +8,7 @@ interface ContextLabelProps {
 
 export function ContextLabel({ title, excerpt, url }: ContextLabelProps) {
     return (
-        <div className="flex flex-col gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
+        <div className="flex flex-col gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-none">
             <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-semibold text-sm uppercase tracking-wider">
                 <BookOpen className="w-4 h-4" />
                 Official Context

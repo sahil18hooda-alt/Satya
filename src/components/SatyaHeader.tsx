@@ -33,7 +33,7 @@ export function SatyaHeader() {
 
                     <div className="flex items-center gap-4">
                         <LanguageSelector />
-                        <button className="px-5 py-2 text-sm font-bold text-[#13316c] border-2 border-[#13316c] rounded-full hover:bg-[#13316c] hover:text-white transition-all">
+                        <button className="px-5 py-2 text-sm font-bold text-[#13316c] border-2 border-[#13316c] rounded-none hover:bg-[#13316c] hover:text-white transition-all">
                             Official Login
                         </button>
                     </div>

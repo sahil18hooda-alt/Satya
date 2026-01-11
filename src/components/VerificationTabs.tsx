@@ -50,7 +50,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-100">
                 <button
@@ -61,7 +61,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         }`}
                 >
                     <FileText className="w-4 h-4" /> Text
-                    {activeTab === 'text' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
+                    {activeTab === 'text' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
                 <button
                     onClick={() => setActiveTab('image')}
@@ -71,7 +71,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         }`}
                 >
                     <ImageIcon className="w-4 h-4" /> Image/Screenshot
-                    {activeTab === 'image' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
+                    {activeTab === 'image' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
                 <button
                     onClick={() => setActiveTab('url')}
@@ -81,7 +81,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         }`}
                 >
                     <LinkIcon className="w-4 h-4" /> URL
-                    {activeTab === 'url' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-t-full"></span>}
+                    {activeTab === 'url' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
             </div>
             {/* Content Area */}
@@ -101,11 +101,11 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                                     value={textInput}
                                     onChange={(e) => setTextInput(e.target.value)}
                                     placeholder="Paste the suspicious WhatsApp message or news text here..."
-                                    className="w-full h-48 p-4 bg-muted/20 border-2 border-dashed border-muted rounded-xl resize-none focus:outline-none focus:border-blue-300 focus:bg-blue-50/20 transition-all text-sm"
+                                    className="w-full h-48 p-4 bg-muted/20 border-2 border-dashed border-muted rounded-none resize-none focus:outline-none focus:border-blue-300 focus:bg-blue-50/20 transition-all text-sm"
                                 />
                                 <button
                                     onClick={() => navigator.clipboard.readText().then(t => setTextInput(t))}
-                                    className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm border hover:bg-muted transition-colors"
+                                    className="absolute top-4 right-4 p-2 bg-white rounded-none shadow-sm border hover:bg-muted transition-colors"
                                     title="Paste"
                                 >
                                     <Copy className="w-4 h-4 text-muted-foreground" />
@@ -126,7 +126,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                             <div
                                 onDragOver={handleDragOver}
                                 onDrop={handleDrop}
-                                className="w-full h-48 border-2 border-dashed border-muted rounded-xl bg-muted/20 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/30 transition-colors relative overflow-hidden"
+                                className="w-full h-48 border-2 border-dashed border-muted rounded-none bg-muted/20 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/30 transition-colors relative overflow-hidden"
                             >
                                 {!fileInput ? (
                                     <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
@@ -136,10 +136,10 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                                     </label>
                                 ) : (
                                     <div className="relative w-full h-full flex items-center justify-center p-2">
-                                        <img src={previewUrl!} alt="Preview" className="max-h-full max-w-full rounded-lg object-contain shadow-sm" />
+                                        <img src={previewUrl!} alt="Preview" className="max-h-full max-w-full rounded-none object-contain shadow-sm" />
                                         <button
                                             onClick={() => { setFileInput(null); setPreviewUrl(null); }}
-                                            className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                                            className="absolute top-2 right-2 bg-black/50 text-white rounded-none p-1 hover:bg-black/70"
                                         >
                                             x
                                         </button>
@@ -165,7 +165,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                                     value={urlInput}
                                     onChange={(e) => setUrlInput(e.target.value)}
                                     placeholder="Results from URLs may vary. Paste link here..."
-                                    className="w-full pl-12 pr-4 py-4 bg-muted/20 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full pl-12 pr-4 py-4 bg-muted/20 border rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         </motion.div>
@@ -183,7 +183,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                 <button
                     onClick={handleVerify}
                     disabled={isAnalyzing || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
-                    className="bg-[#1e3a8a] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="bg-[#1e3a8a] text-white px-8 py-3 rounded-none font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     {isAnalyzing ? (
                         <>

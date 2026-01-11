@@ -32,10 +32,10 @@ export function MarginOfErrorVisualizer() {
     const willFlip = potentialNewVotes > margin;
 
     return (
-        <div className="w-full max-w-6xl mx-auto space-y-8 p-4 md:p-8 bg-white/50 backdrop-blur-xl rounded-3xl border border-white shadow-2xl relative overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto space-y-8 p-4 md:p-8 bg-white/50 backdrop-blur-xl rounded-none border border-white shadow-2xl relative overflow-hidden">
             {/* Background Decor */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-orange-200/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-orange-200/20 rounded-none blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-200/20 rounded-none blur-3xl pointer-events-none" />
 
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
@@ -49,7 +49,7 @@ export function MarginOfErrorVisualizer() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/80 p-2 rounded-2xl border shadow-sm">
+                <div className="flex items-center gap-3 bg-white/80 p-2 rounded-none border shadow-sm">
                     <MapPin className="w-5 h-5 text-blue-600" />
                     <select
                         value={selectedId}
@@ -70,7 +70,7 @@ export function MarginOfErrorVisualizer() {
 
                 {/* Left: Data Journalism Piece */}
                 <div className="lg:col-span-12 xl:col-span-4 space-y-6">
-                    <div className="bg-[#13316c] text-white p-6 rounded-3xl shadow-xl">
+                    <div className="bg-[#13316c] text-white p-6 rounded-none shadow-xl">
                         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <Info className="w-5 h-5 opacity-70" />
                             The Reality Check
@@ -92,7 +92,7 @@ export function MarginOfErrorVisualizer() {
                         </div>
                     </div>
 
-                    <div className="bg-orange-50 border border-orange-100 p-6 rounded-3xl">
+                    <div className="bg-orange-50 border border-orange-100 p-6 rounded-none">
                         <h3 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
                             <AlertTriangle className="w-5 h-5" />
                             Did You Know?
@@ -105,7 +105,7 @@ export function MarginOfErrorVisualizer() {
 
                 {/* Center: 2.5D Visualization */}
                 <div className="lg:col-span-12 xl:col-span-8 flex flex-col gap-6">
-                    <div className="flex-1 bg-slate-50 border border-slate-200 rounded-3xl p-6 md:p-12 relative overflow-hidden min-h-[400px]">
+                    <div className="flex-1 bg-slate-50 border border-slate-200 rounded-none p-6 md:p-12 relative overflow-hidden min-h-[400px]">
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                             style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
@@ -117,7 +117,7 @@ export function MarginOfErrorVisualizer() {
                                 <motion.div
                                     initial={{ height: 0 }}
                                     animate={{ height: 100 }}
-                                    className="w-full bg-slate-200 rounded-t-xl relative group shadow-inner"
+                                    className="w-full bg-slate-200 rounded-none relative group shadow-inner"
                                 >
                                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 font-black text-slate-800">
                                         {margin.toLocaleString()}
@@ -134,13 +134,13 @@ export function MarginOfErrorVisualizer() {
 
                                 <div className="w-full max-w-[300px] h-[250px] relative items-end flex group">
                                     {/* Full Bar (Ghostly) */}
-                                    <div className="absolute bottom-0 w-full h-[250px] bg-blue-100/50 rounded-t-2xl border-2 border-dashed border-blue-200" />
+                                    <div className="absolute bottom-0 w-full h-[250px] bg-blue-100/50 rounded-none border-2 border-dashed border-blue-200" />
 
                                     {/* Active Segment (Simulation) */}
                                     <motion.div
                                         initial={{ height: 0 }}
                                         animate={{ height: `${Math.min(100, (potentialNewVotes / margin) * 20)}%` }}
-                                        className={`absolute bottom-0 w-full rounded-t-2xl shadow-2xl transition-colors duration-500 overflow-hidden ${willFlip ? 'bg-gradient-to-t from-orange-600 to-orange-400' : 'bg-gradient-to-t from-blue-600 to-blue-400'}`}
+                                        className={`absolute bottom-0 w-full rounded-none shadow-2xl transition-colors duration-500 overflow-hidden ${willFlip ? 'bg-gradient-to-t from-orange-600 to-orange-400' : 'bg-gradient-to-t from-blue-600 to-blue-400'}`}
                                     >
                                         {/* Animated Shine Effect */}
                                         <motion.div
@@ -156,7 +156,7 @@ export function MarginOfErrorVisualizer() {
 
                                     {/* Winner indicator line */}
                                     <div className="absolute bottom-[20%] w-full border-t-2 border-slate-900/10 border-dashed z-20">
-                                        <span className="absolute -right-2 md:-right-8 -translate-y-1/2 bg-slate-900 text-white text-[8px] font-bold px-1 rounded">WINNER'S LINE</span>
+                                        <span className="absolute -right-2 md:-right-8 -translate-y-1/2 bg-slate-900 text-white text-[8px] font-bold px-1 rounded-none">WINNER'S LINE</span>
                                     </div>
                                 </div>
 
@@ -172,7 +172,7 @@ export function MarginOfErrorVisualizer() {
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
-                                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-3xl shadow-2xl backdrop-blur-md border-2 z-30 text-center max-w-[280px] ${willFlip ? 'bg-orange-600/90 text-white border-orange-400' : 'bg-white/90 text-slate-900 border-blue-100'}`}
+                                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-none shadow-2xl backdrop-blur-md border-2 z-30 text-center max-w-[280px] ${willFlip ? 'bg-orange-600/90 text-white border-orange-400' : 'bg-white/90 text-slate-900 border-blue-100'}`}
                                 >
                                     <h4 className="text-xl font-black mb-2">
                                         {willFlip ? "OUTCOME FLIPPED!" : "STILL SHORT"}
@@ -189,13 +189,13 @@ export function MarginOfErrorVisualizer() {
                     </div>
 
                     {/* Slider Control */}
-                    <div className="bg-white border-2 border-slate-100 p-8 rounded-3xl shadow-sm">
+                    <div className="bg-white border-2 border-slate-100 p-8 rounded-none shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <span className="font-bold text-slate-700 flex items-center gap-2">
                                 <Users className="w-5 h-5 text-blue-500" />
                                 "What If" Simulator
                             </span>
-                            <span className="bg-slate-100 px-4 py-1 rounded-full font-black text-slate-800">
+                            <span className="bg-slate-100 px-4 py-1 rounded-none font-black text-slate-800">
                                 {simulationPercent}% of Non-Voters
                             </span>
                         </div>
@@ -206,7 +206,7 @@ export function MarginOfErrorVisualizer() {
                             step="1"
                             value={simulationPercent}
                             onChange={(e) => setSimulationPercent(parseInt(e.target.value))}
-                            className="w-full h-3 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-orange-500 transition-all"
+                            className="w-full h-3 bg-slate-100 rounded-none appearance-none cursor-pointer accent-blue-600 hover:accent-orange-500 transition-all"
                         />
                         <div className="flex justify-between mt-4 text-[10px] font-black text-slate-400 uppercase tracking-tighter">
                             <span>Apathy (0%)</span>

@@ -39,7 +39,7 @@ export default function Home() {
 
         // Reset Logic Layer
         setLogicTitle("Constitutional Logic Layer");
-        setLogicDesc("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution.");
+        setLogicDesc("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded-none in the Constitution.");
         setLogicPlaceholder("Ask about ONOE, Article 83, or Election Reforms...");
         setLogicAnalyzeBtn("Analyze");
         setGovRationaleTitle("Government Rationale");
@@ -53,7 +53,7 @@ export default function Home() {
 
         // Translate Logic Layer
         setLogicTitle(await translateNow("Constitutional Logic Layer"));
-        setLogicDesc(await translateNow("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution."));
+        setLogicDesc(await translateNow("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded-none in the Constitution."));
         setLogicPlaceholder(await translateNow("Ask about ONOE, Article 83, or Election Reforms..."));
         setLogicAnalyzeBtn(await translateNow("Analyze"));
         setGovRationaleTitle(await translateNow("Government Rationale"));
@@ -69,7 +69,7 @@ export default function Home() {
   const [logicQuery, setLogicQuery] = useState("");
   const [logicResult, setLogicResult] = useState<any>(null);
   const [logicTitle, setLogicTitle] = useState("Constitutional Logic Layer");
-  const [logicDesc, setLogicDesc] = useState("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded in the Constitution.");
+  const [logicDesc, setLogicDesc] = useState("Powered by \"Veil of Ignorance\". Provides symmetrical arguments grounded-none in the Constitution.");
   const [logicPlaceholder, setLogicPlaceholder] = useState("Ask about ONOE, Article 83, or Election Reforms...");
   const [logicAnalyzeBtn, setLogicAnalyzeBtn] = useState("Analyze");
   const [govRationaleTitle, setGovRationaleTitle] = useState("Government Rationale");
@@ -238,7 +238,7 @@ export default function Home() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-6 py-2.5 rounded-full font-bold text-sm tracking-wide transition-all ${activeTab === tab
+              className={`px-6 py-2.5 rounded-none font-bold text-sm tracking-wide transition-all ${activeTab === tab
                 ? 'bg-[#13316c] text-white shadow-md ring-2 ring-[#13316c] ring-offset-2'
                 : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200 hover:border-gray-300'
                 }`}
@@ -275,9 +275,9 @@ export default function Home() {
                 <ViralWatch />
 
                 {/* Browser Extension Banner */}
-                <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-slate-100 border border-slate-200 rounded-none p-4 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg text-white">
+                    <div className="p-2 bg-blue-600 rounded-none text-white">
                       <Puzzle className="w-5 h-5" />
                     </div>
                     <div>
@@ -285,7 +285,7 @@ export default function Home() {
                       <p className="text-xs text-slate-500">Verify news without leaving WhatsApp Web.</p>
                     </div>
                   </div>
-                  <a href="/satya-extension.zip" download className="bg-white border text-sm font-bold px-4 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+                  <a href="/satya-extension.zip" download className="bg-white border text-sm font-bold px-4 py-1.5 rounded-none shadow-sm hover:bg-slate-50 transition-colors">
                     Get
                   </a>
                 </div>
@@ -301,7 +301,7 @@ export default function Home() {
               className="w-full max-w-4xl mx-auto space-y-6"
             >
               {/* Logic UI Content */}
-              <div className="bg-card border shadow-lg rounded-2xl p-6">
+              <div className="bg-card border shadow-lg rounded-none p-6">
                 <h2 className="text-2xl font-bold mb-2">{logicTitle}</h2>
                 <p className="text-muted-foreground mb-4">
                   {logicDesc}
@@ -311,12 +311,12 @@ export default function Home() {
                     value={logicQuery}
                     onChange={(e) => setLogicQuery(e.target.value)}
                     placeholder={logicPlaceholder}
-                    className="flex-1 min-h-[80px] px-4 py-3 bg-muted/50 border rounded-xl focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                    className="flex-1 min-h-[80px] px-4 py-3 bg-muted/50 border rounded-none focus:ring-2 focus:ring-primary focus:outline-none resize-none"
                   />
                   <button
                     onClick={handleLogicSubmit}
                     disabled={isAnalyzing || !logicQuery.trim()}
-                    className="bg-primary text-primary-foreground px-6 rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 h-auto"
+                    className="bg-primary text-primary-foreground px-6 rounded-none font-semibold hover:opacity-90 transition-all disabled:opacity-50 h-auto"
                   >
                     {isAnalyzing ? <Loader2 className="animate-spin" /> : logicAnalyzeBtn}
                   </button>
@@ -325,21 +325,21 @@ export default function Home() {
 
               {logicResult && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-6 rounded-2xl">
+                  <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-6 rounded-none">
                     <h3 className="font-bold text-green-700 dark:text-green-300 text-lg mb-2 flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5" /> {govRationaleTitle}
                     </h3>
                     <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{logicResult.pro_argument}</p>
                   </div>
 
-                  <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-6 rounded-2xl">
+                  <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-6 rounded-none">
                     <h3 className="font-bold text-orange-700 dark:text-orange-300 text-lg mb-2 flex items-center gap-2">
                       <Search className="w-5 h-5" /> {oppConcernsTitle}
                     </h3>
                     <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{logicResult.con_argument}</p>
                   </div>
 
-                  <div className="col-span-1 md:col-span-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-6 rounded-2xl">
+                  <div className="col-span-1 md:col-span-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-6 rounded-none">
                     <h3 className="font-bold text-blue-700 dark:text-blue-300 text-lg mb-2">{neutralSumTitle}</h3>
                     <p className="text-foreground/90 whitespace-pre-wrap">{logicResult.neutral_summation}</p>
 
@@ -347,7 +347,7 @@ export default function Home() {
                       <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">{citationsTitle}</p>
                       <div className="flex flex-wrap gap-2">
                         {logicResult.citations?.map((cite: string, i: number) => (
-                          <span key={i} className="text-xs bg-background border px-2 py-1 rounded-md text-muted-foreground">
+                          <span key={i} className="text-xs bg-background border px-2 py-1 rounded-none text-muted-foreground">
                             {cite}
                           </span>
                         ))}
@@ -439,8 +439,8 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="flex flex-col items-center text-center p-6 border rounded-2xl bg-card/50 hover:bg-card transition-colors">
-      <div className="mb-4 p-3 bg-muted rounded-full">
+    <div className="flex flex-col items-center text-center p-6 border rounded-none bg-card/50 hover:bg-card transition-colors">
+      <div className="mb-4 p-3 bg-muted rounded-none">
         {icon}
       </div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
@@ -496,7 +496,7 @@ function DeepfakeUploader() {
   };
 
   return (
-    <div className="bg-card border shadow-lg rounded-2xl p-8">
+    <div className="bg-card border shadow-lg rounded-none p-8">
       <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
         <FileVideo className="w-6 h-6 text-red-500" />
         Deepfake Detective (Beta)
@@ -505,7 +505,7 @@ function DeepfakeUploader() {
         Upload a video to analyze for AI manipulation artifacts (visual & audio-sync).
       </p>
 
-      <div className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-8 text-center hover:bg-muted/10 transition-colors">
+      <div className="border-2 border-dashed border-muted-foreground/25 rounded-none p-8 text-center hover:bg-muted/10 transition-colors">
         {!file ? (
           <label className="cursor-pointer block">
             <FileVideo className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -514,7 +514,7 @@ function DeepfakeUploader() {
             <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
           </label>
         ) : (
-          <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg">
+          <div className="flex items-center justify-between bg-muted/30 p-4 rounded-none">
             <span className="font-medium truncate">{file.name}</span>
             <button onClick={() => setFile(null)} className="text-red-500 text-sm hover:underline">Change</button>
           </div>
@@ -524,7 +524,7 @@ function DeepfakeUploader() {
       {file && !result && !loading && (
         <button
           onClick={handleUpload}
-          className="w-full mt-6 bg-primary text-primary-foreground py-3 rounded-xl font-bold hover:opacity-90 transition-all"
+          className="w-full mt-6 bg-primary text-primary-foreground py-3 rounded-none font-bold hover:opacity-90 transition-all"
         >
           Run Deepfake Analysis
         </button>
@@ -546,14 +546,14 @@ function DeepfakeUploader() {
       )}
 
       {error && (
-        <div className="mt-6 p-4 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg">
+        <div className="mt-6 p-4 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-none">
           {error}
         </div>
       )}
 
       {result && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 space-y-6">
-          <div className={`p-6 rounded-2xl text-center border-2 ${result.isFake ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-green-500 bg-green-50 dark:bg-green-900/10'}`}>
+          <div className={`p-6 rounded-none text-center border-2 ${result.isFake ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-green-500 bg-green-50 dark:bg-green-900/10'}`}>
             <h3 className={`text-3xl font-extrabold mb-2 ${result.isFake ? 'text-red-600' : 'text-green-600'}`}>
               {result.isFake ? "LIKELY FAKE" : "LIKELY REAL"}
             </h3>
@@ -571,11 +571,11 @@ function DeepfakeUploader() {
           </div>
 
           {result.heatmap && (
-            <div className="bg-black/5 rounded-2xl p-6">
+            <div className="bg-black/5 rounded-none p-6">
               <h4 className="font-bold text-lg mb-4">Manipulation Heatmap (Grad-CAM)</h4>
-              <div className="relative aspect-video rounded-lg overflow-hidden border">
+              <div className="relative aspect-video rounded-none overflow-hidden border">
                 <img src={`data:image/jpeg;base64,${result.heatmap}`} alt="Heatmap" className="w-full h-full object-cover" />
-                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-none">
                   Red = High Probability of Manipulation
                 </div>
               </div>

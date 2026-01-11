@@ -35,7 +35,7 @@ export function RumorAnalysis({ result }: RumorAnalysisProps) {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-2xl bg-card border rounded-2xl shadow-xl overflow-hidden"
+            className="w-full max-w-2xl bg-card border rounded-none shadow-xl overflow-hidden"
         >
             {/* Header */}
             <div className={clsx(
@@ -81,7 +81,7 @@ export function RumorAnalysis({ result }: RumorAnalysisProps) {
                                     key={i}
                                     className={clsx(
                                         "transition-colors duration-300",
-                                        isHighlighted && isFake ? "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 px-0.5 rounded cursor-help font-bold underline decoration-wavy decoration-red-500 underline-offset-4" : ""
+                                        isHighlighted && isFake ? "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 px-0.5 rounded-none cursor-help font-bold underline decoration-wavy decoration-red-500 underline-offset-4" : ""
                                     )}
                                 >
                                     {word}{" "}
@@ -89,9 +89,9 @@ export function RumorAnalysis({ result }: RumorAnalysisProps) {
                             );
                         })}
                     </p>
-                    <div className="mt-6 p-4 bg-muted/30 border border-muted rounded-xl">
+                    <div className="mt-6 p-4 bg-muted/30 border border-muted rounded-none">
                         <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
-                            <span className="w-1 h-4 bg-primary rounded-full"></span>
+                            <span className="w-1 h-4 bg-primary rounded-none"></span>
                             Detailed Reasoning
                         </h4>
                         <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">

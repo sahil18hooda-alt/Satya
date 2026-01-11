@@ -26,25 +26,25 @@ const MYTHS = [
 
 export function ViralWatch() {
     return (
-        <div className="bg-white border text-card-foreground rounded-3xl shadow-sm p-6">
+        <div className="bg-white border text-card-foreground rounded-none shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="flex items-center gap-2 font-bold text-lg">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="w-2 h-2 rounded-none bg-red-500 animate-pulse" />
                         Viral Watch
                     </h3>
                     <p className="text-xs text-muted-foreground">Top debunked myths circulating now</p>
                 </div>
-                <button className="p-2 hover:bg-muted rounded-full">
+                <button className="p-2 hover:bg-muted rounded-none">
                     <Filter className="w-4 h-4 text-muted-foreground" />
                 </button>
             </div>
 
             <div className="space-y-4">
                 {MYTHS.map((myth, i) => (
-                    <div key={i} className="border rounded-xl p-4 hover:bg-muted/30 transition-colors">
+                    <div key={i} className="border rounded-none p-4 hover:bg-muted/30 transition-colors">
                         <div className="flex justify-between items-start mb-2">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${myth.tagColor}`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-none ${myth.tagColor}`}>
                                 {myth.tag}
                             </span>
                             {myth.trending && (
@@ -66,7 +66,7 @@ export function ViralWatch() {
                 ))}
             </div>
 
-            <button className="w-full mt-4 text-sm font-semibold text-blue-600 py-2 hover:bg-blue-50 rounded-lg transition-colors">
+            <button className="w-full mt-4 text-sm font-semibold text-blue-600 py-2 hover:bg-blue-50 rounded-none transition-colors">
                 View All Trends
             </button>
         </div>

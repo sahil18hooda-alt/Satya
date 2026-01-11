@@ -47,7 +47,7 @@ export function DemocracyDividend() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveSection(tab.id as any)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all ${activeSection === tab.id
+                        className={`flex items-center gap-2 px-4 py-2 rounded-none font-semibold transition-all ${activeSection === tab.id
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}
@@ -105,7 +105,7 @@ function TaxpayerReceipt() {
     };
 
     return (
-        <div className="bg-card border-2 shadow-xl rounded-3xl p-8 max-w-2xl mx-auto">
+        <div className="bg-card border-2 shadow-xl rounded-none p-8 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Calculator className="w-6 h-6 text-primary" />
                 Find Your Contribution
@@ -117,14 +117,14 @@ function TaxpayerReceipt() {
                     <input
                         type="number"
                         placeholder="e.g. 800000"
-                        className="w-full p-3 rounded-xl border bg-background text-lg"
+                        className="w-full p-3 rounded-none border bg-background text-lg"
                         value={income}
                         onChange={(e) => setIncome(Number(e.target.value))}
                     />
                 </div>
                 <button
                     onClick={calculate}
-                    className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-bold hover:opacity-90 transition-all font-mono flex items-center justify-center gap-2"
+                    className="w-full bg-primary text-primary-foreground py-3 rounded-none font-bold hover:opacity-90 transition-all font-mono flex items-center justify-center gap-2"
                 >
                     Generate Receipt <ArrowRight className="w-5 h-5" />
                 </button>
@@ -137,7 +137,7 @@ function TaxpayerReceipt() {
                     className="mt-8 space-y-4"
                 >
                     {/* Receipt Comparison */}
-                    <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 p-6 rounded-xl font-mono relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 p-6 rounded-none font-mono relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-green-500 opacity-80" />
                         <h3 className="text-lg font-bold uppercase tracking-widest text-center mb-6">Taxpayer Impact Report</h3>
 
@@ -154,7 +154,7 @@ function TaxpayerReceipt() {
                             </div>
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-dashed flex justify-between items-center bg-green-50 dark:bg-green-900/10 p-2 rounded-lg">
+                        <div className="mt-6 pt-4 border-t border-dashed flex justify-between items-center bg-green-50 dark:bg-green-900/10 p-2 rounded-none">
                             <span className="font-bold text-green-800 dark:text-green-300">YOUR SAVINGS:</span>
                             <span className="text-2xl font-black text-green-700 dark:text-green-400">₹ {result.savings.toLocaleString()}</span>
                         </div>
@@ -184,7 +184,7 @@ function BudgetBuilder() {
 
     return (
         <div className="space-y-6">
-            <div className="bg-primary/10 p-6 rounded-2xl flex items-center justify-between border border-primary/20 sticky top-4 z-10 backdrop-blur-md">
+            <div className="bg-primary/10 p-6 rounded-none flex items-center justify-between border border-primary/20 sticky top-4 z-10 backdrop-blur-md">
                 <div>
                     <h3 className="text-lg font-bold text-primary">Democracy Dividend Fund</h3>
                     <p className="text-xs text-muted-foreground">Savings from Synchronized Elections</p>
@@ -196,7 +196,7 @@ function BudgetBuilder() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Shop */}
-                <div className="bg-card border rounded-2xl p-6">
+                <div className="bg-card border rounded-none p-6">
                     <h4 className="font-bold mb-4 uppercase text-xs tracking-wider text-muted-foreground">Development Projects</h4>
                     <div className="grid grid-cols-2 gap-3">
                         {DEV_ITEMS.map((item) => (
@@ -204,9 +204,9 @@ function BudgetBuilder() {
                                 key={item.id}
                                 disabled={wallet < item.cost}
                                 onClick={() => buy(item)}
-                                className={`p-4 rounded-xl border text-left flex flex-col items-center gap-2 hover:bg-muted/50 transition-all ${wallet < item.cost ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`p-4 rounded-none border text-left flex flex-col items-center gap-2 hover:bg-muted/50 transition-all ${wallet < item.cost ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className={`p-3 rounded-full ${item.color}`}>{item.icon}</div>
+                                <div className={`p-3 rounded-none ${item.color}`}>{item.icon}</div>
                                 <div className="text-sm font-bold text-center">{item.name}</div>
                                 <div className="text-xs font-mono font-bold text-muted-foreground">₹{item.cost} Cr</div>
                             </button>
@@ -215,7 +215,7 @@ function BudgetBuilder() {
                 </div>
 
                 {/* My India (Inventory) */}
-                <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-6 min-h-[400px]">
+                <div className="bg-black/5 dark:bg-white/5 rounded-none p-6 min-h-[400px]">
                     <h4 className="font-bold mb-4 uppercase text-xs tracking-wider text-muted-foreground">My Developed India</h4>
                     {built.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
@@ -229,7 +229,7 @@ function BudgetBuilder() {
                                         key={i}
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className={`p-2 rounded-lg ${item.color} flex items-center justify-center`}
+                                        className={`p-2 rounded-none ${item.color} flex items-center justify-center`}
                                         title={item.name}
                                     >
                                         {item.icon}
@@ -262,14 +262,14 @@ function CostScale() {
     if (rotation < -20) rotation = -20;
 
     return (
-        <div className="bg-card border rounded-3xl p-8 text-center space-y-8">
+        <div className="bg-card border rounded-none p-8 text-center space-y-8">
             <h3 className="text-2xl font-bold">Investment vs. Savings Simulator</h3>
             <p className="text-muted-foreground max-w-lg mx-auto">
                 Drag the slider to see how quickly the upfront investment pays off.
             </p>
 
             {/* Slider */}
-            <div className="max-w-md mx-auto bg-muted/30 p-4 rounded-xl">
+            <div className="max-w-md mx-auto bg-muted/30 p-4 rounded-none">
                 <div className="flex justify-between text-sm font-bold mb-2">
                     <span>Year 1</span>
                     <span className="text-primary text-xl">Year {years}</span>
@@ -282,7 +282,7 @@ function CostScale() {
                     step="0.5"
                     value={years}
                     onChange={(e) => setYears(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                    className="w-full h-2 bg-slate-200 rounded-none appearance-none cursor-pointer accent-primary"
                 />
             </div>
 
@@ -292,7 +292,7 @@ function CostScale() {
                     className="flex flex-col items-center gap-2 relative transition-all duration-500 ease-out"
                     style={{ transform: `translateY(${rotation * -2}px)` }}
                 >
-                    <div className="w-32 h-32 bg-red-100 rounded-lg flex items-center justify-center border-2 border-red-500 shadow-xl relative z-10">
+                    <div className="w-32 h-32 bg-red-100 rounded-none flex items-center justify-center border-2 border-red-500 shadow-xl relative z-10">
                         <div className="text-center">
                             <div className="text-xs font-bold text-red-600 uppercase">Upfront Cost</div>
                             <div className="text-xl font-black text-red-800">₹ {upfrontCost.toLocaleString()} Cr</div>
@@ -307,14 +307,14 @@ function CostScale() {
                 <div className="absolute bottom-0 flex flex-col items-center justify-end h-full w-full pointer-events-none z-0">
                     {/* Horizontal Beam */}
                     <div
-                        className="w-80 h-3 bg-slate-800 rounded-full transition-all duration-500 ease-out origin-center relative bottom-52"
+                        className="w-80 h-3 bg-slate-800 rounded-none transition-all duration-500 ease-out origin-center relative bottom-52"
                         style={{ transform: `rotate(${rotation}deg)` }}
                     ></div>
 
                     {/* Central Stand */}
                     <div className="w-2 h-52 bg-slate-400 absolute bottom-0"></div>
-                    <div className="w-8 h-8 bg-slate-800 rounded-full absolute bottom-48 z-20 shadow-md"></div>
-                    <div className="w-24 h-4 bg-slate-300 rounded-full absolute bottom-0"></div>
+                    <div className="w-8 h-8 bg-slate-800 rounded-none absolute bottom-48 z-20 shadow-md"></div>
+                    <div className="w-24 h-4 bg-slate-300 rounded-none absolute bottom-0"></div>
                 </div>
 
                 {/* Right Pan: Savings (Variable Weight) */}
@@ -322,7 +322,7 @@ function CostScale() {
                     className="flex flex-col items-center gap-2 relative transition-all duration-500 ease-out"
                     style={{ transform: `translateY(${rotation * 2}px)` }} // Opposite movement
                 >
-                    <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center border-2 border-green-500 shadow-xl relative z-10 transition-all duration-300"
+                    <div className="w-32 h-32 bg-green-100 rounded-none flex items-center justify-center border-2 border-green-500 shadow-xl relative z-10 transition-all duration-300"
                         style={{ transform: `scale(${0.8 + (years * 0.05)})` }} // Gets bigger
                     >
                         <div className="text-center">
@@ -336,7 +336,7 @@ function CostScale() {
                 </div>
             </div>
 
-            <div className={`p-4 rounded-xl max-w-md mx-auto text-sm font-bold transition-colors ${net > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            <div className={`p-4 rounded-none max-w-md mx-auto text-sm font-bold transition-colors ${net > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 Result: {net > 0 ? `PROFIT: ₹ ${net.toLocaleString()} Cr` : `DEFICIT: -₹ ${Math.abs(net).toLocaleString()} Cr`}
             </div>
         </div>
@@ -349,7 +349,7 @@ function MCCHeatmap() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-card border rounded-2xl p-6">
+                <div className="bg-card border rounded-none p-6">
                     <h3 className="font-bold flex items-center gap-2 mb-4">
                         <TrendingDown className="text-red-500 w-5 h-5" />
                         Current System (5 Years)
@@ -358,7 +358,7 @@ function MCCHeatmap() {
                         {Array.from({ length: 60 }).map((_, i) => (
                             <div
                                 key={i}
-                                className={`w-3 h-3 rounded-sm ${Math.random() > 0.6 ? 'bg-red-500' : 'bg-muted-foreground/10'}`}
+                                className={`w-3 h-3 rounded-none ${Math.random() > 0.6 ? 'bg-red-500' : 'bg-muted-foreground/10'}`}
                                 title={Math.random() > 0.6 ? "Policy Paralysis (MCC Active)" : "Governance Active"}
                             />
                         ))}
@@ -366,8 +366,8 @@ function MCCHeatmap() {
                     <p className="mt-4 text-sm text-red-600 font-bold">~ 400 Days lost to Code of Conduct</p>
                 </div>
 
-                <div className="bg-card border rounded-2xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-2 bg-green-500 text-white text-xs font-bold rounded-bl-xl">ONOE</div>
+                <div className="bg-card border rounded-none p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-2 bg-green-500 text-white text-xs font-bold rounded-none">ONOE</div>
                     <h3 className="font-bold flex items-center gap-2 mb-4">
                         <TrendingUp className="text-green-500 w-5 h-5" />
                         Projected ONOE System
@@ -376,7 +376,7 @@ function MCCHeatmap() {
                         {Array.from({ length: 60 }).map((_, i) => (
                             <div
                                 key={i}
-                                className={`w-3 h-3 rounded-sm ${i < 5 ? 'bg-red-500' : 'bg-muted-foreground/10'}`}
+                                className={`w-3 h-3 rounded-none ${i < 5 ? 'bg-red-500' : 'bg-muted-foreground/10'}`}
                             />
                         ))}
                     </div>

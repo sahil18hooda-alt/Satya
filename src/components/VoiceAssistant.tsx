@@ -159,13 +159,13 @@ export function VoiceAssistant() {
             </div>
 
             {/* Voice Control */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-blue-100">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-none p-8 border-2 border-blue-100">
                 <div className="flex flex-col items-center space-y-6">
                     {/* Microphone Button */}
                     <motion.button
                         onClick={isRecording ? stopRecording : startRecording}
                         disabled={isProcessing || isSpeaking}
-                        className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-all ${isRecording
+                        className={`relative w-32 h-32 rounded-none flex items-center justify-center transition-all ${isRecording
                             ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/50"
                             : "bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/50"
                             } ${isProcessing || isSpeaking ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -186,7 +186,7 @@ export function VoiceAssistant() {
                         {/* Pulsing ring when recording */}
                         {isRecording && (
                             <motion.div
-                                className="absolute inset-0 rounded-full border-4 border-red-400"
+                                className="absolute inset-0 rounded-none border-4 border-red-400"
                                 animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0, 0.8] }}
                                 transition={{ repeat: Infinity, duration: 2 }}
                             />
@@ -206,7 +206,7 @@ export function VoiceAssistant() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm">
+                        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-none text-sm">
                             {error}
                         </div>
                     )}
@@ -215,7 +215,7 @@ export function VoiceAssistant() {
 
             {/* Conversation History */}
             {messages.length > 0 && (
-                <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-4">
+                <div className="bg-white rounded-none border shadow-sm p-6 space-y-4">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-bold text-slate-900">Conversation</h3>
                         <button
@@ -237,7 +237,7 @@ export function VoiceAssistant() {
                                         }`}
                                 >
                                     <div
-                                        className={`max-w-[80%] px-4 py-3 rounded-2xl ${message.role === "user"
+                                        className={`max-w-[80%] px-4 py-3 rounded-none ${message.role === "user"
                                             ? "bg-blue-600 text-white"
                                             : "bg-slate-100 text-slate-900"
                                             }`}
@@ -255,7 +255,7 @@ export function VoiceAssistant() {
             )}
 
             {/* Instructions */}
-            <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-600">
+            <div className="bg-slate-50 rounded-none p-4 text-sm text-slate-600">
                 <p className="font-semibold mb-2">How to use:</p>
                 <ul className="list-disc list-inside space-y-1">
                     <li>Click the microphone to start speaking</li>
