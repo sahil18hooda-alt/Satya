@@ -256,6 +256,22 @@ export default function Home() {
               <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
                 <VerificationTabs onVerify={handleVerifyRequest} isAnalyzing={isAnalyzing} />
 
+                {/* Browser Extension Banner */}
+                <div className="bg-slate-100 border border-slate-200 rounded-none p-4 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-none text-white">
+                      <Puzzle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900">Browser Extension</h4>
+                      <p className="text-xs text-slate-500">Verify news without leaving WhatsApp Web.</p>
+                    </div>
+                  </div>
+                  <a href="/satya-extension.zip" download className="bg-white border text-sm font-bold px-4 py-1.5 rounded-none shadow-sm hover:bg-slate-50 transition-colors">
+                    Get
+                  </a>
+                </div>
+
                 <AnimatePresence>
                   {result && (
                     <motion.div
@@ -274,21 +290,8 @@ export default function Home() {
                 <StatsCard />
                 <ViralWatch />
 
-                {/* Browser Extension Banner */}
-                <div className="bg-slate-100 border border-slate-200 rounded-none p-4 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-none text-white">
-                      <Puzzle className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900">Browser Extension</h4>
-                      <p className="text-xs text-slate-500">Verify news without leaving WhatsApp Web.</p>
-                    </div>
-                  </div>
-                  <a href="/satya-extension.zip" download className="bg-white border text-sm font-bold px-4 py-1.5 rounded-none shadow-sm hover:bg-slate-50 transition-colors">
-                    Get
-                  </a>
-                </div>
+                <StatsCard />
+                <ViralWatch />
               </div>
 
             </div>
