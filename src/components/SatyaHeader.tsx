@@ -110,8 +110,8 @@ export function SatyaHeader() {
     ];
 
     const searchableItems = [
-        ...navItems.map(item => ({ label: item.label, id: item.id, type: 'section', href: `/#${item.id}` })),
-        ...navItems.flatMap(item => item.subItems?.map(sub => ({ label: `${item.label} > ${sub.label}`, id: sub.id, type: 'sub-feature', href: `/#${item.id}`, setter: sub.setter })) || []),
+        ...navItems.map(item => ({ label: item.label, id: item.id, type: 'section', href: item.id === 'rumor' ? '/' : `/${item.id}` })),
+        ...navItems.flatMap(item => item.subItems?.map(sub => ({ label: `${item.label} > ${sub.label}`, id: sub.id, type: 'sub-feature', href: item.id === 'rumor' ? '/' : `/${item.id}`, setter: sub.setter })) || []),
         { label: 'Privacy Policy', href: '/privacy', type: 'page' },
         { label: 'Terms & Conditions', href: '/terms', type: 'page' },
         { label: 'Copyright Policy', href: '/copyright', type: 'page' },
@@ -272,9 +272,9 @@ export function SatyaHeader() {
                                             className="absolute top-full left-0 bg-white text-gray-800 shadow-xl rounded-none border border-gray-200 py-1 min-w-[160px] z-[100]"
                                         >
                                             {item.subItems.map((sub, subIdx) => (
-                                                <button
+                                                <Link
                                                     key={sub.id}
-                                                    role="menuitem"
+                                                    href={item.id === 'rumor' ? '/' : `/${item.id}`}
                                                     onClick={() => {
                                                         setActiveTab(item.id as any);
                                                         const subItem = sub as any;
@@ -282,16 +282,8 @@ export function SatyaHeader() {
                                                             subItem.setter(subItem.id as any);
                                                         }
                                                         setOpenDropdown(null);
-
-                                                        // Scroll to section
-                                                        const element = document.getElementById(item.id);
-                                                        if (element) {
-                                                            element.scrollIntoView({ behavior: 'smooth' });
-                                                        } else {
-                                                            window.location.href = `/#${item.id}`;
-                                                        }
                                                     }}
-                                                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 hover:text-[#003366] transition-colors border-l-4 focus:outline-none focus:bg-gray-100 ${activeTab === item.id && (
+                                                    className={`block w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 hover:text-[#003366] transition-colors border-l-4 focus:outline-none focus:bg-gray-100 ${activeTab === item.id && (
                                                         (item.id === 'rumor' && rumorSubTab === sub.id) ||
                                                         (item.id === 'logic' && logicSubTab === sub.id) ||
                                                         (item.id === 'deepfake' && deepfakeSubTab === sub.id) ||
@@ -304,7 +296,7 @@ export function SatyaHeader() {
                                                     ) ? 'border-[#003366] bg-gray-50 text-[#003366]' : 'border-transparent'}`}
                                                 >
                                                     {sub.label}
-                                                </button>
+                                                </Link>
                                             ))}
                                         </motion.div>
                                     )}
@@ -366,20 +358,16 @@ export function SatyaHeader() {
                                                 onClick={() => {
                                                     setIsSearchOpen(false);
                                                     setSearchQuery("");
-                                                    if (item.type === 'page') {
+                                                    if (item.type === 'page' || item.type === 'section' || item.type === 'sub-feature') {
                                                         window.location.href = item.href;
-                                                    } else {
+                                                    }
+
+                                                    // Set state if available
+                                                    if ('setter' in item && (item as any).setter) {
                                                         const itemId = (item as any).id;
-                                                        const el = document.getElementById(itemId || "");
-                                                        if (el) {
-                                                            el.scrollIntoView({ behavior: 'smooth' });
-                                                            if (itemId) setActiveTab(itemId as any);
-                                                        } else {
-                                                            window.location.href = item.href;
-                                                        }
-                                                        if ('setter' in item && (item as any).setter) {
-                                                            (item as any).setter(itemId as any);
-                                                        }
+                                                        if (itemId) (item as any).setter(itemId as any);
+                                                        // Also set parent active tab if possible, though we might be navigating away
+                                                        // Ideally we parse the href to set activeTab, but navigation will handle page load
                                                     }
                                                 }}
                                                 className={`w-full text-left px-4 py-3 flex items-center justify-between group transition-colors ${isHighContrast ? 'hover:bg-white hover:text-black' : 'hover:bg-slate-50'}`}
