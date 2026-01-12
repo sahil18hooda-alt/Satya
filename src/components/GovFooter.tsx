@@ -26,7 +26,7 @@ export function GovFooter() {
     ];
 
     return (
-        <footer aria-label="Official Government Footer" className="bg-slate-900 text-white mt-12 border-t-4 border-orange-500 font-mukta">
+        <footer aria-label="Official Government Footer" className="bg-slate-900 text-white mt-12 border-t-4 border-orange-500 font-mukta relative z-10">
             {/* Top Footer: Quick Links & Contact */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -151,18 +151,6 @@ export function GovFooter() {
                         <p className="text-slate-600 text-[10px]">
                             Last Updated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} | Developed by Advanced Agentic Coding Team
                         </p>
-                    </div>
-                    <div className="flex items-center gap-8 bg-white/5 px-6 py-2 rounded-full border border-white/10">
-                        <img
-                            src="https://www.meity.gov.in/writereaddata/files/digital-india-logo.png"
-                            alt="Digital India"
-                            className="h-8 w-auto grayscale invert opacity-50"
-                        />
-                        <img
-                            src="https://secure.mygov.in/sites/all/themes/mygov/images/mygov_logo_white.png"
-                            alt="MyGov"
-                            className="h-6 w-auto opacity-50"
-                        />
                     </div>
                 </div>
             </div>

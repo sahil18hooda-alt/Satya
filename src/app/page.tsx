@@ -53,7 +53,19 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-white">
+    <main id="main-content" className="min-h-screen bg-white relative">
+      {/* Background Image with Overlay */}
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/india-voting-bg.jpg)',
+          opacity: '0.85'
+        }}
+      />
+
+      {/* White gradient overlay for better text readability */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-white/40 via-white/30 to-white/40" />
+
       <style jsx global>{`
         @media print {
           .no-print, header, nav, footer, button, .accessibility-controls {
@@ -69,7 +81,7 @@ export default function Home() {
         }
       `}</style>
 
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20 relative z-10">
         {/* Hero Section */}
         <div className="text-left mb-12">
           <h1 className="text-4xl md:text-6xl font-extrabold text-[#1f242e] mb-4 tracking-tight leading-tight">
