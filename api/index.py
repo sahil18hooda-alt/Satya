@@ -20,8 +20,12 @@ except ImportError:
     try:
         from deepfake_detection import DeepfakeDetector
     except ImportError:
-        print("CRITICAL: DeepfakeDetector Module NOT FOUND. Deepfake features will fail.")
-        DeepfakeDetector = None
+        try:
+             # Last ditch effort for some local setups where CWD is root
+             from api.deepfake_detection import DeepfakeDetector
+        except ImportError:
+            print("CRITICAL: DeepfakeDetector Module NOT FOUND. Deepfake features will fail.")
+            DeepfakeDetector = None
 import shutil
 
 load_dotenv() # Load environment variables from .env file
@@ -493,12 +497,21 @@ async def get_latest_news(request: NewsRequest):
 # --- Deepfake Detective ---
 
 # Global Detector Instance
+# Global Detector Instance
 detector = None
 try:
-    from api.deepfake_detection import DeepfakeDetector
-    detector = DeepfakeDetector() # Load models once
+    from .deepfake_detection import DeepfakeDetector
+    detector = DeepfakeDetector()
 except ImportError:
-    print("Deepfake Module not found. Feature disabled.")
+    try:
+        from deepfake_detection import DeepfakeDetector
+        detector = DeepfakeDetector()
+    except ImportError:
+        try:
+            from api.deepfake_detection import DeepfakeDetector
+            detector = DeepfakeDetector()
+        except ImportError:
+            print("Deepfake Module not found. Feature disabled.")
 except Exception as e:
     print(f"Deepfake Model Load Error: {e}")
 
