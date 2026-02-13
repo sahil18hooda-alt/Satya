@@ -274,23 +274,26 @@ async def latest_news(request: NewsRequest):
         system_prompt = """You are an unbiased news aggregator for Indian Elections.
 Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
 
+CRITICAL: You MUST return a JSON object with a "news" key containing an array of 6 news items.
+
 OUTPUT SCHEMA (JSON):
-[
-  {
-    "headline": "Headline in requested language",
-    "summary": "Short 2-sentence summary in requested language",
-    "date": "Today's Date",
-    "source": "Source Name (e.g. DD News, ECI)",
-    "image_prompt": "A prompt to describe the image for this news",
-    "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
-  }
-]"""
+{
+  "news": [
+    {
+      "headline": "Headline in requested language",
+      "summary": "Short 2-sentence summary in requested language",
+      "date": "2026-02-13",
+      "source": "Source Name (e.g. DD News, ECI)",
+      "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
+    }
+  ]
+}"""
         
         response = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Generate 6 latest election news items in {request.language} language."}
+                {"role": "user", "content": f"Generate 6 latest election news items in {request.language} language. Return JSON with 'news' array."}
             ],
             temperature=0.7,
             max_tokens=4096,
@@ -298,17 +301,39 @@ OUTPUT SCHEMA (JSON):
         )
         
         text = response.choices[0].message.content
+        print(f"News API Response: {text[:200]}...")  # Debug log
         data = json.loads(text)
         
         # Handle if response is wrapped in an object
+        news_items = []
         if isinstance(data, dict) and "news" in data:
-            return data["news"]
+            news_items = data["news"]
         elif isinstance(data, dict) and "items" in data:
-            return data["items"]
+            news_items = data["items"]
+        elif isinstance(data, dict) and "articles" in data:
+            news_items = data["articles"]
         elif isinstance(data, list):
-            return data
+            news_items = data
         else:
+            print(f"Unexpected news response format: {list(data.keys())}")
             return []
+        
+        # Add relevant images based on category
+        category_images = {
+            "Official": "https://images.pexels.com/photos/8828474/pexels-photo-8828474.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+            "Updates": "https://images.pexels.com/photos/6953876/pexels-photo-6953876.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+            "Policy": "https://images.pexels.com/photos/6077326/pexels-photo-6077326.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+            "Legal": "https://images.pexels.com/photos/8111769/pexels-photo-8111769.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+            "Technology": "https://images.pexels.com/photos/5380642/pexels-photo-5380642.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop",
+            "Environment": "https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+        }
+        
+        # Add image_url to each news item based on category
+        for item in news_items:
+            category = item.get("category", "Official")
+            item["image_url"] = category_images.get(category, category_images["Official"])
+        
+        return news_items
 
     except Exception as e:
         print(f"News Error: {e}")

@@ -80,10 +80,13 @@ export function ElectionNews() {
                     {news.map((item, i) => (
                         <div key={i} className="bg-white border text-card-foreground rounded-none overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
                             <div className="h-48 relative overflow-hidden bg-slate-100">
-                                {/* Mock Image Gradient for now, would be real URL */}
-                                <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
-                                    <span className="opacity-20 font-black text-4xl">NEWS</span>
-                                </div>
+                                {/* Real Image from backend based on category */}
+                                <img
+                                    src={item.image_url || `https://images.pexels.com/photos/8828474/pexels-photo-8828474.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`}
+                                    alt={item.headline}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
+                                />
                                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-none text-xs font-bold flex items-center gap-1 shadow-sm">
                                     <Tag className="w-3 h-3 text-orange-500" />
                                     {item.category || "General"}
