@@ -1,33 +1,31 @@
 import os
 import json
-import typing
-import typing
 import tempfile
 import base64
 import io
+import httpx
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from gtts import gTTS
 from pydantic import BaseModel
 from typing import List, Optional
-import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
 try:
     from deepfake_detection import DeepfakeDetector
 except ImportError:
     from .deepfake_detection import DeepfakeDetector
-import shutil
-import yt_dlp
 
-load_dotenv() # Load environment variables from .env file
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 app = FastAPI(title="Bhartiya-Election AI Backend")
 
-# Enable CORS for frontend integration
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with frontend URL (e.g., http://localhost:3000)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,71 +51,42 @@ class AnalyzeResponse(BaseModel):
     explanation: Explanation
     contextLinks: List[ContextLink]
 
-# --- Gemini Configuration ---
-API_KEY = os.getenv("GEMINI_API_KEY")
-if not API_KEY:
-    print("WARNING: GEMINI_API_KEY not found in environment variables.")
+class ConstitutionalRequest(BaseModel):
+    query: str
+    language: Optional[str] = "en"
 
-genai.configure(api_key=API_KEY)
+class ConstitutionalResponse(BaseModel):
+    pro_argument: str
+    con_argument: str
+    neutral_summation: str
+    citations: List[str]
 
-# Use a model that supports JSON mode if possible, or prompt engineering
-generation_config = {
-    "temperature": 0.2,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_mime_type": "application/json",
-}
+class NewsRequest(BaseModel):
+    language: str
 
-model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash", # Using available 2.0 Flash model
-    generation_config=generation_config,
-    system_instruction="""You are an expert Fact Checker and Rumor Buster for the Indian Election context. 
-    Your task is to verify rumors and misinformation with high precision.
+class VoiceChatRequest(BaseModel):
+    audio_base64: str
+    conversation_history: Optional[List[dict]] = []
 
-    You must support ALL 22 Scheduled Languages of India: Assamese, Bengali, Bodo, Dogri, Gujarati, Hindi, Kannada, Kashmiri, Konkani, Maithili, Malayalam, Manipuri, Marathi, Nepali, Odia, Punjabi, Sanskrit, Santali, Sindhi, Tamil, Telugu, and Urdu.
+class VoiceChatResponse(BaseModel):
+    text_query: str
+    text_response: str
+    audio_base64: str
+    detected_language: str
 
-    IMPORTANT: The 'reason', 'contextLinks.title', and 'contextLinks.excerpt' fields MUST BE IN THE SAME LANGUAGE as the input rumor text. If the input is in one of these languages, the response MUST be in that same language.
-    
-    Output must be a strictly valid JSON object with the following schema:
-    {
-      "isFake": boolean,
-      "confidence": float (0.0 to 1.0),
-      "explanation": {
-        "highlightedWords": [string] (Extract EXACT symbols, words, or short phrases from the input text that are factually incorrect, sensationalist, or misleading. Do NOT change the words.),
-        "reason": string (A detailed, step-by-step analysis explaining WHY the claim is fake/misleading. Cite specific contradictions with official rules or logic.)
-      },
-      "contextLinks": [
-        {
-          "title": string (Source Title),
-          "excerpt": string (Relevant quote from source),
-          "url": string (Link to official source e.g., eci.gov.in, pib.gov.in, reputable news)
-        }
-      ]
-    }
-    
-    If the claim is VAGUE or OPINION, treat it as 'isFake': false (or neutral) but low confidence.
-    If the claim is unrelated to elections/politics, simply verify it as best as possible.
-    """
-)
+# --- Groq Configuration ---
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    print("WARNING: GROQ_API_KEY not found in environment variables.")
 
-# Chat Model for Audio Conversation
-chat_model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    generation_config={
-        "response_mime_type": "application/json"
-    },
-    system_instruction="""You are a helpful Indian Election Rumor Buster assistant.
-    Listen to the user query.
-    1. If they ask a general question, answer it.
-    2. If they share a rumor, verify it briefly.
-    3. ALWAYS respond in the SAME LANGUAGE as the user's audio.
-    4. Return valid JSON: { "response_text": "...", "language_code": "..." }
-       - language_code must be a valid ISO 639-1 code supported by Google Translate (e.g., 'hi', 'en', 'bn', 'ta', 'te').
-    """
-)
+groq_client = Groq(api_key=GROQ_API_KEY)
 
-# Initialize Deepfake Detector (Lazy load to save startup time if needed, but here we do eager)
+# --- Sarvam AI Configuration (for Voice) ---
+SARVAM_API_KEY = os.getenv("SARVAM_AI_API_KEY")
+SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
+SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
+
+# Initialize Deepfake Detector
 deepfake_detector = None
 try:
     deepfake_detector = DeepfakeDetector()
@@ -126,35 +95,56 @@ except Exception as e:
 
 @app.get("/")
 def read_root():
-    return {"message": "Bhartiya-Election AI Backend (Gemini Powered) is running"}
+    return {"message": "Bhartiya-Election AI Backend (Groq Powered) is running"}
 
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_rumor(request: AnalyzeRequest):
     query_text = request.text
-    print(f"Analyzing with Gemini: {query_text}")
+    print(f"Analyzing with Groq: {query_text}")
 
-    if not API_KEY:
-         raise HTTPException(status_code=500, detail="Server Error: Gemini API Key not configured.")
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="Server Error: Groq API Key not configured.")
 
     try:
-        # Prompting Gemini
-        # Note: Gemini 1.5 Flash has built-in grounding (browsing) capabilities if enabled, 
-        # but for API consistency we rely on the model's knowledge or tool use if we configured tools.
-        # For this prototype, we rely on the model's internal knowledge which is vast.
+        system_prompt = """You are an expert Fact Checker and Rumor Buster for the Indian Election context. 
+Your task is to verify rumors and misinformation with high precision.
+
+CRITICAL: You MUST output ONLY valid JSON. Do NOT include markdown code blocks, explanations, or any text outside the JSON object.
+
+Output must be a strictly valid JSON object with the following schema:
+{
+  "isFake": boolean,
+  "confidence": float (0.0 to 1.0),
+  "explanation": {
+    "highlightedWords": [string] (Extract EXACT words/phrases from input that are misleading),
+    "reason": string (Detailed analysis in ENGLISH explaining WHY the claim is fake/misleading)
+  },
+  "contextLinks": [
+    {
+      "title": string (Source Title in ENGLISH),
+      "excerpt": string (Relevant quote in ENGLISH),
+      "url": string (Link to official source e.g., eci.gov.in, pib.gov.in)
+    }
+  ]
+}
+
+IMPORTANT: All text fields (reason, title, excerpt) MUST be in ENGLISH to ensure valid JSON encoding.
+If the claim is VAGUE or OPINION, treat it as 'isFake': false but low confidence."""
+
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Verify this claim in English: '{query_text}'"}
+            ],
+            temperature=0.2,
+            max_tokens=2048,
+            response_format={"type": "json_object"}
+        )
         
-        response = model.generate_content(f"Verify this claim: '{query_text}'")
-        
-        # Parse output
-        response_text = response.text
-        # Clean up code blocks if model adds them despite mime_type
-        if response_text.startswith("```json"):
-            response_text = response_text[7:-3]
-        elif response_text.startswith("```"):
-             response_text = response_text[3:-3]
-            
+        response_text = response.choices[0].message.content
         data = json.loads(response_text)
         
-        # Hydrate response object
         return AnalyzeResponse(
             isFake=data.get("isFake", False),
             confidence=data.get("confidence", 0.0),
@@ -173,8 +163,7 @@ async def analyze_rumor(request: AnalyzeRequest):
         )
 
     except Exception as e:
-        print(f"Gemini Error: {e}")
-        # Graceful fallback
+        print(f"Groq Error: {e}")
         return AnalyzeResponse(
             isFake=False,
             confidence=0.0,
@@ -183,144 +172,41 @@ async def analyze_rumor(request: AnalyzeRequest):
             contextLinks=[]
         )
 
-@app.post("/chat-audio")
-async def chat_audio(file: UploadFile = File(...)):
-    print(f"Received audio file: {file.filename}")
-    
-    # Save temp file
-    suffix = f".{file.filename.split('.')[-1]}" if "." in file.filename else ".wav"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
-
-    try:
-        if not API_KEY:
-             raise HTTPException(status_code=500, detail="Gemini API Key missing")
-
-        # Upload to Gemini
-        print("Uploading audio to Gemini...")
-        gemini_file = genai.upload_file(tmp_path, mime_type=file.content_type or "audio/wav")
-        
-        # Generator
-        print("Generating response...")
-        result = chat_model.generate_content(["Listen to this audio and respond appropriately.", gemini_file])
-        
-        # Parse JSON
-        response_text = result.text.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:-3]
-        elif response_text.startswith("```"):
-             response_text = response_text[3:-3]
-             
-        data = json.loads(response_text)
-        text_resp = data.get("response_text", "I could not understand the audio.")
-        lang = data.get("language_code", "en")
-        
-        print(f"Response: {text_resp} (Lang: {lang})")
-        
-        # Text to Speech
-        try:
-            tts = gTTS(text=text_resp, lang=lang)
-        except Exception as e:
-             print(f"gTTS Error for lang {lang}: {e}")
-             tts = gTTS(text=text_resp, lang='en')
-             
-        mp3_fp = io.BytesIO()
-        tts.write_to_fp(mp3_fp)
-        mp3_fp.seek(0)
-        base64_audio = base64.b64encode(mp3_fp.read()).decode("utf-8")
-        
-        return {"text": text_resp, "audio": base64_audio}
-
-    except Exception as e:
-        print(f"Audio Chat Error: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-    finally:
-        # Cleanup
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-
-
-
-@app.post("/detect-deepfake")
-async def detect_deepfake(file: UploadFile = File(...)):
-    print(f"Deepfake Analysis Request: {file.filename}")
-    
-    suffix = f".{file.filename.split('.')[-1]}" if "." in file.filename else ".mp4"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
-        
-    try:
-        if not deepfake_detector:
-             raise HTTPException(status_code=500, detail="Deepfake Detector not initialized.")
-
-        result = deepfake_detector.detect(tmp_path)
-        
-        if "error" in result:
-             raise HTTPException(status_code=400, detail=result["error"])
-             
-        return result
-
-    except Exception as e:
-        print(f"Deepfake Error: {e}")
-        return JSONResponse(status_code=500, content={"detail": str(e)})
-
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-
-# --- Constitutional Logic Layer ---
-
-class ConstitutionalRequest(BaseModel):
-    query: str
-    language: Optional[str] = "en"
-
-class ConstitutionalResponse(BaseModel):
-    pro_argument: str
-    con_argument: str
-    neutral_summation: str
-    citations: List[str]
-
-constitutional_model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    generation_config={"response_mime_type": "application/json"},
-    system_instruction="""You are a Neutral Constitutional Expert operating under a 'Veil of Ignorance' (Rawlsian Fairness).
-    Your goal is to provide a perfectly symmetrical analysis of political topics like 'One Nation One Election' (ONOE).
-
-    RULES:
-    1. SYMMETRY: You MUST provide exactly one strong PRO argument and one strong CON argument of equal length and weight.
-    2. NEUTRALITY: Do NOT use emotive adjectives (e.g., 'revolutionary', 'dangerous', 'historic'). Use neutral verbs (e.g., 'proposes', 'stipulates', 'argues').
-    3. CITATIONS: Every claim must be tied to a source. Ideally cite the 'Kovind Committee Report', 'Constitution of India' (Arts 83, 172, 325), or 'ECI Reports'.
-    4. LANGUAGE: You MUST support ALL 22 Scheduled Languages of India. 
-       - ALWAYS respond in the SAME LANGUAGE as the user's input query. 
-       - If the query is in Hindi, the entire JSON response (pro_argument, con_argument, neutral_summation) must be in Hindi.
-       - Citations can remain in English if they refer to English documents, but translated citations are preferred if standard.
-
-    OUTPUT SCHEMA (JSON):
-    {
-        "pro_argument": "The government rationale...",
-        "con_argument": "The opposition concern...",
-        "neutral_summation": "A balanced concluding sentence...",
-        "citations": ["Kovind Report Pg 45", "Article 83(2)", "ECI Notification 2024"]
-    }
-    """
-)
-
 @app.post("/chat-constitutional", response_model=ConstitutionalResponse)
 async def chat_constitutional(request: ConstitutionalRequest):
     print(f"Constitutional Query: {request.query}")
     try:
-        response = constitutional_model.generate_content(f"Analyze this topic: '{request.query}'. Language: {request.language}")
+        system_prompt = """You are a Neutral Constitutional Expert operating under a 'Veil of Ignorance' (Rawlsian Fairness).
+Your goal is to provide a perfectly symmetrical analysis of political topics like 'One Nation One Election' (ONOE).
+
+RULES:
+1. SYMMETRY: You MUST provide exactly one strong PRO argument and one strong CON argument of equal length and weight.
+2. NEUTRALITY: Do NOT use emotive adjectives (e.g., 'revolutionary', 'dangerous'). Use neutral verbs (e.g., 'proposes', 'stipulates').
+3. CITATIONS: Every claim must be tied to a source. Cite 'Kovind Committee Report', 'Constitution of India' (Arts 83, 172, 325), or 'ECI Reports'.
+4. LANGUAGE: ALWAYS respond in the SAME LANGUAGE as the user's input query.
+
+OUTPUT SCHEMA (JSON):
+{
+    "pro_argument": "The government rationale...",
+    "con_argument": "The opposition concern...",
+    "neutral_summation": "A balanced concluding sentence...",
+    "citations": ["Kovind Report Pg 45", "Article 83(2)", "ECI Notification 2024"]
+}"""
+
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Analyze this topic: '{request.query}'. Language: {request.language}"}
+            ],
+            temperature=0.2,
+            max_tokens=4096,
+            response_format={"type": "json_object"}
+        )
         
-        text = response.text.strip()
-        if text.startswith("```json"): text = text[7:-3]
-        elif text.startswith("```"): text = text[3:-3]
-        
+        text = response.choices[0].message.content
         data = json.loads(text)
-        if isinstance(data, list):
-            data = data[0]
+        
         return ConstitutionalResponse(
             pro_argument=data.get("pro_argument", ""),
             con_argument=data.get("con_argument", ""),
@@ -340,138 +226,213 @@ async def chat_constitutional(request: ConstitutionalRequest):
 async def analyze_image(file: UploadFile = File(...)):
     print(f"Analyzing Image: {file.filename}")
     
-    suffix = f".{file.filename.split('.')[-1]}" if "." in file.filename else ".jpg"
+    # Note: Groq doesn't support vision yet, so we'll return a placeholder
+    # You could integrate with another service like GPT-4 Vision or use OCR + text analysis
+    return AnalyzeResponse(
+        isFake=False,
+        confidence=0.0,
+        originalText="[Image Analysis - Vision API not available with Groq]",
+        explanation=Explanation(
+            highlightedWords=[],
+            reason="Image analysis requires vision API. Please use text-based fact-checking."
+        ),
+        contextLinks=[]
+    )
+
+@app.post("/detect-deepfake")
+async def detect_deepfake(file: UploadFile = File(...)):
+    print(f"Deepfake Analysis Request: {file.filename}")
+    
+    suffix = f".{file.filename.split('.')[-1]}" if "." in file.filename else ".mp4"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         tmp.write(await file.read())
         tmp_path = tmp.name
-
+        
     try:
-        if not API_KEY:
-             raise HTTPException(status_code=500, detail="Gemini API Key missing")
+        if not deepfake_detector:
+            raise HTTPException(status_code=500, detail="Deepfake Detector not initialized.")
 
-        # Upload to Gemini
-        gemini_file = genai.upload_file(tmp_path, mime_type=file.content_type or "image/jpeg")
+        result = deepfake_detector.detect(tmp_path)
         
-        # Prompt
-        response = model.generate_content(["Verify the claim or news presented in this image.", gemini_file])
-        
-        # Parse output
-        response_text = response.text
-        if response_text.startswith("```json"):
-            response_text = response_text[7:-3]
-        elif response_text.startswith("```"):
-             response_text = response_text[3:-3]
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
             
-        data = json.loads(response_text)
-        
-        return AnalyzeResponse(
-            isFake=data.get("isFake", False),
-            confidence=data.get("confidence", 0.0),
-            originalText="[Image Analysis]",
-            explanation=Explanation(
-                highlightedWords=data.get("explanation", {}).get("highlightedWords", []),
-                reason=data.get("explanation", {}).get("reason", "No explanation provided.")
-            ),
-            contextLinks=[
-                ContextLink(
-                    title=link.get("title", "Source"),
-                    excerpt=link.get("excerpt", ""),
-                    url=link.get("url", "#")
-                ) for link in data.get("contextLinks", [])
-            ]
-        )
+        return result
 
     except Exception as e:
-            print(f"YouTube Analysis Error: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+        print(f"Deepfake Error: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
+@app.post("/latest-news")
+async def latest_news(request: NewsRequest):
+    print(f"News Request: {request.language}")
+    try:
+        system_prompt = """You are an unbiased news aggregator for Indian Elections.
+Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
+
+OUTPUT SCHEMA (JSON):
+[
+  {
+    "headline": "Headline in requested language",
+    "summary": "Short 2-sentence summary in requested language",
+    "date": "Today's Date",
+    "source": "Source Name (e.g. DD News, ECI)",
+    "image_prompt": "A prompt to describe the image for this news",
+    "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
+  }
+]"""
+        
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Generate 6 latest election news items in {request.language} language."}
+            ],
+            temperature=0.7,
+            max_tokens=4096,
+            response_format={"type": "json_object"}
+        )
+        
+        text = response.choices[0].message.content
+        data = json.loads(text)
+        
+        # Handle if response is wrapped in an object
+        if isinstance(data, dict) and "news" in data:
+            return data["news"]
+        elif isinstance(data, dict) and "items" in data:
+            return data["items"]
+        elif isinstance(data, list):
+            return data
+        else:
+            return []
+
+    except Exception as e:
+        print(f"News Error: {e}")
+        return []
+
+@app.post("/voice/chat", response_model=VoiceChatResponse)
+async def voice_chat(request: VoiceChatRequest):
+    """
+    Complete voice interaction: Sarvam STT -> Groq Response -> Sarvam TTS
+    """
+    try:
+        if not SARVAM_API_KEY:
+            return JSONResponse({"error": "Sarvam API Key not configured"}, status_code=500)
+
+        # 1. Speech-to-Text via Sarvam AI
+        audio_content = base64.b64decode(request.audio_base64)
+        
+        async with httpx.AsyncClient() as client:
+            # Sarvam STT takes multipart/form-data
+            files = {"file": ("audio.webm", audio_content, "audio/webm")}
+            headers = {"api-subscription-key": SARVAM_API_KEY}
+            
+            stt_response = await client.post(
+                SARVAM_STT_URL,
+                headers=headers,
+                files=files,
+                data={"model": "saaras:v3"}
+            )
+            
+            if stt_response.status_code != 200:
+                print(f"Sarvam STT Error: {stt_response.text}")
+                return JSONResponse({"error": "Speech-to-Text failed"}, status_code=500)
+            
+            stt_data = stt_response.json()
+            detected_text = stt_data.get("transcript", "")
+            detected_lang = stt_data.get("language_code", "en-IN")
+
+        if not detected_text:
+            return JSONResponse({"error": "No speech detected"}, status_code=400)
+
+        print(f"STT: {detected_text} ({detected_lang})")
+
+        # 2. Build conversation context and Generate AI response with Groq
+        conversation_messages = [
+            {
+                "role": "system",
+                "content": """You are S.A.T.Y.A. Assistant, a multilingual voice assistant for Indian elections and governance.
+
+CORE CAPABILITIES:
+- Support all 22 scheduled Indian languages
+- Provide accurate information about elections, ONOE (One Nation One Election), and Indian government
+- Maintain natural, conversational tone suitable for voice interaction
+- Keep responses concise (2-3 sentences max) for voice delivery
+
+RESPONSE GUIDELINES:
+- Speak naturally as if in conversation
+- Avoid bullet points, lists, or formatting
+- Use simple, clear language in ENGLISH
+- Provide specific facts with sources when possible"""
+            }
+        ]
+        
+        # Add conversation history
+        for msg in request.conversation_history[-5:]:
+            conversation_messages.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
+        
+        # Add current user query
+        conversation_messages.append({
+            "role": "user",
+            "content": f"User asked in {detected_lang}: {detected_text}"
+        })
+        
+        # Generate response with Groq
+        ai_response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=conversation_messages,
+            temperature=0.7,
+            max_tokens=512
+        )
+        
+        response_text = ai_response.choices[0].message.content.strip()
+        print(f"AI: {response_text}")
+
+        # 3. Text-to-Speech via Sarvam AI (Bulbul)
+        async with httpx.AsyncClient() as client:
+            tts_payload = {
+                "inputs": [response_text],
+                "target_language_code": detected_lang,
+                "speaker": "anushka",
+                "model": "bulbul:v2"
+            }
+            
+            headers = {
+                "api-subscription-key": SARVAM_API_KEY,
+                "Content-Type": "application/json"
+            }
+            
+            tts_response = await client.post(
+                SARVAM_TTS_URL,
+                headers=headers,
+                json=tts_payload
+            )
+            
+            if tts_response.status_code != 200:
+                print(f"Sarvam TTS Error: {tts_response.text}")
+                return JSONResponse({"error": "Text-to-Speech failed"}, status_code=500)
+            
+            tts_data = tts_response.json()
+            audio_base64 = tts_data.get("audios", [""])[0]
+
+        return VoiceChatResponse(
+            text_query=detected_text,
+            text_response=response_text,
+            audio_base64=audio_base64,
+            detected_language=detected_lang
+        )
+        
+    except Exception as e:
+        print(f"Voice Chat Exception: {str(e)}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-class NewsRequest(BaseModel):
-    language: str
-
-@app.post("/latest-news")
-async def latest_news(request: NewsRequest):
-    print(f"News Request: {request.language}")
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            generation_config={"response_mime_type": "application/json"},
-            system_instruction="""You are an unbiased news aggregator for Indian Elections.
-            Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
-            
-            OUTPUT SCHEMA (JSON):
-            [
-              {
-                "headline": "Headline in requested language",
-                "summary": "Short 2-sentence summary in requested language",
-                "date": "Today's Date",
-                "source": "Source Name (e.g. DD News, ECI)",
-                "image_prompt": "A prompt to describe the image for this news (e.g. 'Voting queue in Kerala')",
-                "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
-              }
-            ]
-            """
-        )
-        
-        prompt = f"Generate 6 latest election news items in {request.language} language."
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        
-        if text.startswith(""): text = text[3:-3]
-        
-        data = json.loads(text)
-        return data
-
-    except Exception as e:
-        print(f"News Error: {e}")
-        return []
-
-class NewsRequest(BaseModel):
-    language: str
-
-@app.post("/latest-news")
-async def latest_news(request: NewsRequest):
-    print(f"News Request: {request.language}")
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            generation_config={"response_mime_type": "application/json"},
-            system_instruction="""You are an unbiased news aggregator for Indian Elections.
-            Generate 6 latest distinct fictional but realistic news headlines and summaries about Indian Elections.
-            
-            OUTPUT SCHEMA (JSON):
-            [
-              {
-                "headline": "Headline in requested language",
-                "summary": "Short 2-sentence summary in requested language",
-                "date": "Today's Date",
-                "source": "Source Name (e.g. DD News, ECI)",
-                "image_prompt": "A prompt to describe the image for this news (e.g. 'Voting queue in Kerala')",
-                "category": "One of [Official, Updates, Policy, Legal, Technology, Environment]"
-              }
-            ]
-            """
-        )
-        
-        prompt = f"Generate 6 latest election news items in {request.language} language."
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        
-        if text.startswith("```json"): text = text[7:-3]
-        elif text.startswith("```"): text = text[3:-3]
-        
-        data = json.loads(text)
-        return data
-
-    except Exception as e:
-        print(f"News Error: {e}")
-        return []
