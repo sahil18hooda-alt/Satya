@@ -6,6 +6,8 @@ import { StatsCard } from "@/components/StatsCard";
 import { ViralWatch } from "@/components/ViralWatch";
 import { VerificationTabs } from "@/components/VerificationTabs";
 import { RecentCheckResult } from "@/components/RecentCheckResult";
+import { DownloadLink } from "@/components/DownloadLink";
+import { T } from "@/components/TranslatedText";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
@@ -53,18 +55,7 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-white relative">
-      {/* Background Image with Overlay */}
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: 'url(/india-voting-bg.jpg)',
-          opacity: '0.85'
-        }}
-      />
-
-      {/* White gradient overlay for better text readability */}
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-white/40 via-white/30 to-white/40" />
+    <main id="main-content" className="min-h-screen relative bg-transparent">
 
       <style jsx global>{`
         @media print {
@@ -85,10 +76,10 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-left mb-12">
           <h1 className="text-4xl md:text-6xl font-extrabold text-[#1f242e] mb-4 tracking-tight leading-tight">
-            Don't Forward <span className="text-[#f97316]">Without</span> <span className="text-[#16a34a]">Checking.</span>
+            <T>Don't Forward</T> <span className="text-[#f97316]"><T>Without</T></span> <span className="text-[#16a34a]"><T>Checking.</T></span>
           </h1>
           <p className="text-base md:text-lg text-gray-500 max-w-3xl leading-relaxed">
-            Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.
+            <T>Paste messages directly from WhatsApp Web or upload screenshots to verify election news instantly with our AI-powered engine.</T>
           </p>
         </div>
 
@@ -98,20 +89,19 @@ export default function Home() {
           <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
             <VerificationTabs onVerify={handleVerifyRequest} isAnalyzing={isAnalyzing} />
 
-            {/* Browser Extension Banner */}
-            <div className="bg-slate-100 border border-slate-200 rounded-none p-4 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-600 rounded-none text-white">
-                  <Puzzle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900">Browser Extension</h4>
-                  <p className="text-xs text-slate-500">Verify news without leaving WhatsApp Web.</p>
-                </div>
-              </div>
-              <a href="/satya-extension.zip" download className="bg-white border text-sm font-bold px-4 py-1.5 rounded-none shadow-sm hover:bg-slate-50 transition-colors">
-                Get
-              </a>
+            {/* Browser Extension Section */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Puzzle className="w-5 h-5 text-blue-600" />
+                <T>Browser Extensions & Mobile Tools</T>
+              </h3>
+              <DownloadLink
+                title="S.A.T.Y.A WhatsApp Web Extension"
+                href="/satya-extension.zip"
+                size="1.2 MB"
+                format="ZIP / Chrome Extension"
+                instructions="1. Download the ZIP file. 2. Extract it to a folder. 3. Open Chrome Extensions. 4. Enable 'Developer Mode' and 'Load Unpacked'."
+              />
             </div>
 
             <AnimatePresence>

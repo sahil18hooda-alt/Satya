@@ -32,6 +32,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${notoSans.variable} ${mukta.variable} font-sans antialiased bg-[#fbfaf9]`}>
+        {/* Global Background Image with Overlay */}
+        <div
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/india-voting-bg.jpg)',
+            opacity: '0.85'
+          }}
+        />
+        <div className="fixed inset-0 -z-10 bg-gradient-to-b from-white/40 via-white/30 to-white/40 pointer-events-none" />
+        
         <LanguageProvider>
           <TabProvider>
             <AccessibilityWrapper>
