@@ -22,6 +22,10 @@ export function VoiceAssistant() {
 
     const recognitionRef = useRef<any>(null);
     const synthRef = useRef<SpeechSynthesis | null>(null);
+    
+    // Tracking state for stream completion
+    const chunkSpeakingCountRef = useRef<number>(0);
+    const isStreamDoneRef = useRef<boolean>(true);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -50,7 +54,7 @@ export function VoiceAssistant() {
                 };
 
                 recognition.onend = () => {
-                     // We manually manage stating/stopping so we do nothing here unless auto-restart is needed
+                     // We manually manage starting/stopping
                      if (!isProcessing && !isSpeaking && recognitionRef.current) {
                          setIsListening(false);
                      }
@@ -75,7 +79,8 @@ export function VoiceAssistant() {
         if (isSpeaking && synthRef.current) {
             synthRef.current.cancel();
             setIsSpeaking(false);
-            // Optionally, we could auto-restart listening here
+            chunkSpeakingCountRef.current = 0;
+            // Interrupt and restart listening
             try {
                 recognitionRef.current.start();
                 setIsListening(true);
@@ -91,19 +96,73 @@ export function VoiceAssistant() {
                 recognitionRef.current.start();
                 setIsListening(true);
             } catch (e) {
-                // If it's already started
             }
         }
     };
 
+    const checkAndRestartListening = () => {
+        if (isStreamDoneRef.current && chunkSpeakingCountRef.current === 0) {
+            setIsSpeaking(false);
+            setIsProcessing(false);
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.start();
+                    setIsListening(true);
+                } catch (e) {}
+            }
+        }
+    };
+
+    const playTTSChunk = (text: string) => {
+        if (!synthRef.current) return;
+        
+        chunkSpeakingCountRef.current += 1;
+        setIsSpeaking(true);
+        setIsProcessing(false);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        const voices = synthRef.current.getVoices();
+        const indianVoice = voices.find(v => v.lang.includes('IN') && v.lang.includes('en')) || 
+                           voices.find(v => v.lang.includes('IN'));
+        if (indianVoice) {
+            utterance.voice = indianVoice;
+        }
+
+        utterance.lang = "en-IN"; 
+        utterance.rate = 1.0;
+        
+        utterance.onend = () => {
+            chunkSpeakingCountRef.current -= 1;
+            checkAndRestartListening();
+        };
+
+        utterance.onerror = () => {
+            chunkSpeakingCountRef.current -= 1;
+            checkAndRestartListening();
+        };
+
+        synthRef.current.speak(utterance);
+    };
+
     const sendTextToBackend = async (query: string) => {
         setIsProcessing(true);
+        isStreamDoneRef.current = false;
+        chunkSpeakingCountRef.current = 0;
+        
         const userMessage: Message = {
             role: "user",
             content: query,
             timestamp: new Date(),
         };
-        setMessages((prev) => [...prev, userMessage]);
+        
+        const assistantMessage: Message = {
+            role: "assistant",
+            content: "",
+            timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, userMessage, assistantMessage]);
 
         try {
             const API_URL =
@@ -111,7 +170,7 @@ export function VoiceAssistant() {
                     ? "http://localhost:8000"
                     : process.env.NEXT_PUBLIC_API_URL ?? "";
 
-            const response = await fetch(`${API_URL}/chat-text`, {
+            const response = await fetch(`${API_URL}/chat-stream`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -125,69 +184,71 @@ export function VoiceAssistant() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || "Processing failed");
             }
 
-            const data = await response.json();
+            if (!response.body) throw new Error("No response body");
 
-            const assistantMessage: Message = {
-                role: "assistant",
-                content: data.text_response,
-                timestamp: new Date(),
-            };
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+            let currentSentence = "";
 
-            setMessages((prev) => [...prev, assistantMessage]);
-            playTTS(data.text_response);
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunkText = decoder.decode(value, { stream: true });
+                fullText += chunkText;
+                currentSentence += chunkText;
+                
+                // Update UI in real-time
+                setMessages((prev) => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = { 
+                        ...newMessages[newMessages.length - 1], 
+                        content: fullText 
+                    };
+                    return newMessages;
+                });
+
+                // Match end of sentence (., ?, !, or Hindi Purna Viram ।, or newline)
+                const sentenceEndRegex = /([.?!।\n]+)/;
+                const match = currentSentence.match(sentenceEndRegex);
+                
+                if (match) {
+                    const splitIndex = match.index! + match[0].length;
+                    const sentenceToSpeak = currentSentence.slice(0, splitIndex).trim();
+                    currentSentence = currentSentence.slice(splitIndex);
+                    
+                    if (sentenceToSpeak.length > 0) {
+                        playTTSChunk(sentenceToSpeak);
+                    }
+                }
+            }
+            
+            isStreamDoneRef.current = true;
+            
+            // Speak any remaining text (e.g. if the LLM output didn't end with punctuation)
+            if (currentSentence.trim().length > 0) {
+                playTTSChunk(currentSentence.trim());
+            } else {
+                checkAndRestartListening();
+            }
+
         } catch (err: any) {
             setError(err.message || "Failed to process request");
             setIsProcessing(false);
+            isStreamDoneRef.current = true;
         }
-    };
-
-    const playTTS = (text: string) => {
-        if (!synthRef.current) return;
-        
-        synthRef.current.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        const voices = synthRef.current.getVoices();
-        const indianVoice = voices.find(v => v.lang.includes('IN') && v.lang.includes('en')) || 
-                           voices.find(v => v.lang.includes('IN'));
-        if (indianVoice) {
-            utterance.voice = indianVoice;
-        }
-
-        utterance.lang = "en-IN"; 
-        utterance.rate = 1.0;
-        
-        utterance.onstart = () => {
-            setIsSpeaking(true);
-            setIsProcessing(false);
-        };
-        
-        utterance.onend = () => {
-            setIsSpeaking(false);
-            // Auto restart listening for continuous conversation!
-            if (recognitionRef.current) {
-                 try {
-                     recognitionRef.current.start();
-                     setIsListening(true);
-                 } catch (e) {}
-            }
-        };
-
-        utterance.onerror = () => {
-            setIsSpeaking(false);
-            setIsProcessing(false);
-        };
-
-        synthRef.current.speak(utterance);
     };
 
     const clearConversation = () => {
         setMessages([]);
         setError("");
+        isStreamDoneRef.current = true;
+        chunkSpeakingCountRef.current = 0;
         if (synthRef.current) {
             synthRef.current.cancel();
             setIsSpeaking(false);
@@ -206,7 +267,7 @@ export function VoiceAssistant() {
                     Live Conversation AI
                 </h2>
                 <p className="text-slate-600">
-                    Just speak! S.A.T.Y.A will listen and reply immediately.
+                    Just speak! S.A.T.Y.A will listen and stream its reply instantly.
                 </p>
                 {detectedLanguage !== "en-IN" && (
                     <p className="text-sm text-blue-600 font-medium">

@@ -5,7 +5,7 @@ import base64
 import io
 import httpx
 from fastapi import FastAPI, HTTPException, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from gtts import gTTS
 from pydantic import BaseModel
@@ -507,6 +507,61 @@ RESPONSE GUIDELINES:
         )
     except Exception as e:
         print(f"Chat Text Exception: {str(e)}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.post("/chat-stream")
+async def chat_stream(request: ChatTextRequest):
+    """
+    Fast chunk-streamed endpoint for instant browser voice conversation
+    """
+    try:
+        conversation_messages = [
+            {
+                "role": "system",
+                "content": """You are S.A.T.Y.A. Assistant, a multilingual voice assistant for Indian elections and governance.
+
+CORE CAPABILITIES:
+- Support all 22 scheduled Indian languages
+- Provide accurate information about elections, ONOE (One Nation One Election), and Indian government
+- Maintain natural, conversational tone suitable for voice interaction
+- Keep responses concise (not more than 2-3 sentences max)
+
+RESPONSE GUIDELINES:
+- Speak naturally as if in conversation
+- Avoid bullet points, lists, or formatting
+- Use simple, clear language
+- Make the first sentence extremely short so you can start speaking instantly."""
+            }
+        ]
+        
+        for msg in request.conversation_history[-5:]:
+            conversation_messages.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
+            
+        conversation_messages.append({
+            "role": "user",
+            "content": f"User asked in {request.language}: {request.query}"
+        })
+        
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=conversation_messages,
+            temperature=0.7,
+            max_tokens=150,
+            stream=True
+        )
+        
+        def generate():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield content
+                    
+        return StreamingResponse(generate(), media_type="text/plain")
+    except Exception as e:
+        print(f"Chat Stream Exception: {str(e)}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/voice/chat", response_model=VoiceChatResponse)
