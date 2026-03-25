@@ -75,6 +75,15 @@ class VoiceChatResponse(BaseModel):
     audio_base64: str
     detected_language: str
 
+class ChatTextRequest(BaseModel):
+    query: str
+    language: str
+    conversation_history: Optional[List[dict]] = []
+
+class ChatTextResponse(BaseModel):
+    text_response: str
+    detected_language: str
+
 class TranslateRequest(BaseModel):
     text: str
     target_language: str
@@ -445,6 +454,60 @@ OUTPUT SCHEMA (JSON):
     except Exception as e:
         print(f"News Error: {e}")
         return []
+
+@app.post("/chat-text", response_model=ChatTextResponse)
+async def chat_text(request: ChatTextRequest):
+    """
+    Fast text-based endpoint for instant browser voice conversation
+    """
+    try:
+        conversation_messages = [
+            {
+                "role": "system",
+                "content": """You are S.A.T.Y.A. Assistant, a multilingual voice assistant for Indian elections and governance.
+
+CORE CAPABILITIES:
+- Support all 22 scheduled Indian languages
+- Provide accurate information about elections, ONOE (One Nation One Election), and Indian government
+- Maintain natural, conversational tone suitable for voice interaction
+- Keep responses concise (2-3 sentences max) for voice delivery
+
+RESPONSE GUIDELINES:
+- Speak naturally as if in conversation
+- Avoid bullet points, lists, or formatting
+- Use simple, clear language in ENGLISH
+- Provide specific facts with sources when possible"""
+            }
+        ]
+        
+        for msg in request.conversation_history[-5:]:
+            conversation_messages.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
+            
+        conversation_messages.append({
+            "role": "user",
+            "content": f"User asked in {request.language}: {request.query}"
+        })
+        
+        ai_response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=conversation_messages,
+            temperature=0.7,
+            max_tokens=150
+        )
+        
+        response_text = ai_response.choices[0].message.content.strip()
+        print(f"Chat Text AI: {response_text}")
+        
+        return ChatTextResponse(
+            text_response=response_text,
+            detected_language=request.language
+        )
+    except Exception as e:
+        print(f"Chat Text Exception: {str(e)}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/voice/chat", response_model=VoiceChatResponse)
 async def voice_chat(request: VoiceChatRequest):
