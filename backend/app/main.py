@@ -11,6 +11,7 @@ from gtts import gTTS
 from pydantic import BaseModel
 from typing import List, Optional
 from groq import Groq
+import google.generativeai as genai
 from dotenv import load_dotenv
 try:
     from deepfake_detection import DeepfakeDetector
@@ -74,12 +75,29 @@ class VoiceChatResponse(BaseModel):
     audio_base64: str
     detected_language: str
 
+class TranslateRequest(BaseModel):
+    text: str
+    target_language: str
+
+class TranslateResponse(BaseModel):
+    translated_text: str
+    source_language: str
+    target_language: str
+
 # --- Groq Configuration ---
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     print("WARNING: GROQ_API_KEY not found in environment variables.")
 
 groq_client = Groq(api_key=GROQ_API_KEY)
+
+# --- Gemini Configuration ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+else:
+    print("WARNING: GEMINI_API_KEY not found in environment variables.")
 
 # --- Sarvam AI Configuration (for Voice) ---
 SARVAM_API_KEY = os.getenv("SARVAM_AI_API_KEY")
@@ -263,9 +281,98 @@ async def detect_deepfake(file: UploadFile = File(...)):
         print(f"Deepfake Error: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
+
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+@app.post("/translate", response_model=TranslateResponse)
+async def translate_text(request: TranslateRequest):
+    """
+    Translate text to specified Indian language using Groq
+    """
+    print(f"Translation Request: '{request.text[:50]}...' to {request.target_language}")
+    
+    # Language code to full name mapping
+    LANGUAGE_MAP = {
+        'en': 'English',
+        'hi': 'Hindi',
+        'bn': 'Bengali',
+        'te': 'Telugu',
+        'ta': 'Tamil',
+        'mr': 'Marathi',
+        'gu': 'Gujarati',
+        'kn': 'Kannada',
+        'ml': 'Malayalam',
+        'pa': 'Punjabi',
+        'or': 'Odia',
+        'as': 'Assamese'
+    }
+    
+    target_lang_name = LANGUAGE_MAP.get(request.target_language, 'English')
+    
+    # If target is English, return as-is
+    if request.target_language == 'en':
+        return TranslateResponse(
+            translated_text=request.text,
+            source_language='en',
+            target_language='en'
+        )
+    
+    try:
+        if GEMINI_API_KEY:
+            # Use Gemini for translation as fallback/primary
+            prompt = f"""You are a professional translator specializing in Indian languages.
+Translate the following text to {target_lang_name} accurately.
+Preserve technical terms like S.A.T.Y.A, ECI, ONOE.
+Return ONLY the translated text, nothing else.
+
+Text to translate: {request.text}"""
+            
+            response = gemini_model.generate_content(prompt)
+            translated_text = response.text.strip()
+            
+            return TranslateResponse(
+                translated_text=translated_text,
+                source_language='en',
+                target_language=request.target_language
+            )
+        else:
+            # Original Groq implementation (likely restricted)
+            system_prompt = f"""You are a professional translator specializing in Indian languages.
+Translate the given text to {target_lang_name} accurately while preserving:
+- Technical terms and proper nouns (like S.A.T.Y.A, ECI, ONOE)
+- Tone and formality
+- Meaning and context
+
+CRITICAL: Return ONLY the translated text, nothing else. No explanations, no notes."""
+
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Translate to {target_lang_name}: {request.text}"}
+                ],
+                temperature=0.3,
+                max_tokens=2048
+            )
+            
+            translated_text = response.choices[0].message.content.strip()
+            
+            return TranslateResponse(
+                translated_text=translated_text,
+                source_language='en',
+                target_language=request.target_language
+            )
+        
+    except Exception as e:
+        print(f"Translation Error: {e}")
+        # Return original text if translation fails
+        return TranslateResponse(
+            translated_text=request.text,
+            source_language='en',
+            target_language=request.target_language
+        )
 
 @app.post("/latest-news")
 async def latest_news(request: NewsRequest):
@@ -411,10 +518,10 @@ RESPONSE GUIDELINES:
         
         # Generate response with Groq
         ai_response = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=conversation_messages,
             temperature=0.7,
-            max_tokens=512
+            max_tokens=150
         )
         
         response_text = ai_response.choices[0].message.content.strip()
