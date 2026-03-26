@@ -579,36 +579,6 @@ LANGUAGE HANDLING:
 """
 )
 
-class ChatTextRequest(BaseModel):
-    query: str
-    language: str
-    conversation_history: Optional[List[dict]] = []
-
-class ChatTextResponse(BaseModel):
-    text_response: str
-    detected_language: str
-
-@app.post("/chat-text", response_model=ChatTextResponse)
-async def chat_text(request: ChatTextRequest):
-    """Fast text-based endpoint for instant browser voice conversation"""
-    try:
-        conversation_context = ""
-        for msg in request.conversation_history[-5:]:
-            role = "User" if msg.get("role") == "user" else "Assistant"
-            conversation_context += f"{role}: {msg.get('content', '')}\n"
-        
-        prompt = f"{conversation_context}\nUser (in language {request.language}): {request.query}\nAssistant:"
-        ai_response = voice_model.generate_content(prompt)
-        response_text = ai_response.text.strip()
-        
-        return ChatTextResponse(
-             text_response=response_text,
-             detected_language=request.language
-        )
-    except Exception as e:
-        print(f"Chat Text Error: {e}")
-        return JSONResponse({"error": str(e)}, status_code=500)
-
 class VoiceChatRequest(BaseModel):
     audio_base64: str
     conversation_history: Optional[List[dict]] = []
