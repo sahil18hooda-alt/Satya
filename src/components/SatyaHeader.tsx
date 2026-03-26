@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useTabs } from "@/contexts/TabContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { T } from "./TranslatedText";
+import { NotificationTicker } from "./NotificationTicker";
 
 export function SatyaHeader() {
     const {
@@ -314,6 +315,9 @@ export function SatyaHeader() {
                     </div>
                 </div>
             </nav>
+
+            {/* Scrolling Notification Bar */}
+            <NotificationTicker isHighContrast={isHighContrast} />
 
             {/* Global Search Overlay */}
             <AnimatePresence>
