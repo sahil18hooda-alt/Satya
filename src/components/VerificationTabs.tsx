@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Image as ImageIcon, Link as LinkIcon, Lock, Loader2, UploadCloud, FileText, Camera } from "lucide-react";
 import { useTabs } from "@/contexts/TabContext";
 import { Captcha } from "./Captcha";
+import { T } from "./TranslatedText";
 
 interface VerificationTabsProps {
     onVerify: (type: 'text' | 'image' | 'url', content: string | File) => void;
@@ -54,7 +55,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
     };
 
     return (
-        <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 rounded-none shadow-sm border border-gray-200 overflow-hidden">
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-100">
                 <button
@@ -64,7 +65,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
-                    <FileText className="w-4 h-4" /> Text
+                    <FileText className="w-4 h-4" /> <T>Text</T>
                     {activeTab === 'text' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
                 <button
@@ -74,7 +75,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                 >
-                    <ImageIcon className="w-4 h-4" /> Image/Screenshot
+                    <ImageIcon className="w-4 h-4" /> <T>Image/Screenshot</T>
                     {activeTab === 'image' && <span className="absolute bottom-0 left-0 w-full h-1 bg-[#13316c] rounded-none"></span>}
                 </button>
                 <button
@@ -107,6 +108,9 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                                     placeholder="Paste the suspicious WhatsApp message or news text here..."
                                     className="w-full h-48 p-4 bg-muted/20 border-2 border-dashed border-muted rounded-none resize-none focus:outline-none focus:border-blue-300 focus:bg-blue-50/20 transition-all text-sm"
                                 />
+                                {/* Note: Textarea placeholders are tricky with T component if T returns a fragment. 
+                                    However, T returns a string-like render in the end. 
+                                    I will leave placeholders for now or wrap them if T is modified to return just string. */}
                                 <button
                                     onClick={() => navigator.clipboard.readText().then(t => setTextInput(t))}
                                     className="absolute top-4 right-4 p-2 bg-white rounded-none shadow-sm border hover:bg-muted transition-colors"
@@ -136,7 +140,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                                     <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
                                         <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                         <UploadCloud className="w-10 h-10 text-muted-foreground mb-3" />
-                                        <span className="text-sm font-medium text-muted-foreground">Or drag and drop a screenshot here</span>
+                                        <span className="text-sm font-medium text-muted-foreground"><T>Or drag and drop a screenshot here</T></span>
                                     </label>
                                 ) : (
                                     <div className="relative w-full h-full flex items-center justify-center p-2">
@@ -182,7 +186,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                         <Lock className="w-3 h-3" />
-                        Your search is anonymous and secure.
+                        <T>Your search is anonymous and secure.</T>
                     </div>
                 </div>
 
@@ -198,10 +202,10 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                     >
                         {isAnalyzing ? (
                             <>
-                                <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                                <Loader2 className="w-4 h-4 animate-spin" /> <T>Verifying...</T>
                             </>
                         ) : (
-                            "Verify Now"
+                            <T>Verify Now</T>
                         )}
                     </button>
                 </div>

@@ -258,7 +258,7 @@ export function ConstitutionalGame() {
 
             {/* Phase: END GAME */}
             {phase === "END_GAME" && (
-                <div className="bg-card border-2 shadow-2xl rounded-none p-10 text-center max-w-3xl mx-auto space-y-8">
+                <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 border-2 shadow-2xl rounded-none p-10 text-center max-w-3xl mx-auto space-y-8">
                     <div>
                         <h2 className="text-3xl font-black mb-2">Simulation Complete</h2>
                         <p className="text-muted-foreground">The Constitutional Impact of your Era</p>

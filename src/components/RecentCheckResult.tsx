@@ -15,7 +15,7 @@ export function RecentCheckResult({ result }: RecentCheckResultProps) {
 
     return (
         <>
-            <div className="bg-white border rounded-none p-6 shadow-sm mt-6">
+            <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 border rounded-none p-6 shadow-sm mt-6">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">
                     Most Recent Check
                 </h3>

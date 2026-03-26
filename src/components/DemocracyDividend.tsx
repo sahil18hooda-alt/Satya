@@ -107,7 +107,7 @@ function TaxpayerReceipt() {
     };
 
     return (
-        <div className="bg-card border-2 shadow-xl rounded-none p-8 max-w-2xl mx-auto">
+        <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 border-2 shadow-xl rounded-none p-8 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Calculator className="w-6 h-6 text-primary" />
                 Find Your Contribution

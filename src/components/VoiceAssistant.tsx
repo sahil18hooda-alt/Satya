@@ -162,7 +162,7 @@ export function VoiceAssistant() {
             </div>
 
             {/* Voice Control */}
-            <div id="voice-control" className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-none p-8 border-2 transition-all ${subTab === 'assistant' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-blue-100'}`}>
+            <div id="voice-control" className={`bg-gradient-to-br from-orange-50 via-white to-green-50 rounded-none p-8 border-2 transition-all ${subTab === 'assistant' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-100'}`}>
                 <div className="flex flex-col items-center space-y-6">
                     {/* Microphone Button */}
                     <motion.button

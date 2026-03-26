@@ -73,7 +73,7 @@ export function ConstitutionalLogic() {
 
     return (
         <div className="w-full max-w-4xl mx-auto space-y-6">
-            <div className="bg-card border shadow-lg rounded-none p-6">
+            <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 border shadow-lg rounded-none p-6">
                 <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
                     <Landmark className="w-6 h-6 text-blue-800" />
                     {logicTitle}

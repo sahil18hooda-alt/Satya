@@ -1,4 +1,5 @@
 import { TrendingUp, Users } from "lucide-react";
+import { T } from "./TranslatedText";
 
 export function StatsCard() {
     return (
@@ -10,7 +11,7 @@ export function StatsCard() {
             <div className="relative z-10">
                 <TrendingUp className="w-8 h-8 mx-auto mb-3 opacity-90" />
                 <h2 className="text-5xl font-bold mb-1 font-mukta">15,400</h2>
-                <p className="text-blue-100 text-sm font-medium mb-6">Messages Verified Today</p>
+                <p className="text-blue-100 text-sm font-medium mb-6"><T>Messages Verified Today</T></p>
 
                 <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-none backdrop-blur-sm">
                     <div className="flex -space-x-2">
@@ -19,7 +20,7 @@ export function StatsCard() {
                         <div className="w-6 h-6 rounded-none bg-green-400 border-2 border-[#1e3a8a]" />
                         <div className="w-6 h-6 rounded-none bg-yellow-400 border-2 border-[#1e3a8a]" />
                     </div>
-                    <span className="text-xs font-semibold text-blue-100">+2k active users now</span>
+                    <span className="text-xs font-semibold text-blue-100">+2k <T>active users now</T></span>
                 </div>
             </div>
         </div>

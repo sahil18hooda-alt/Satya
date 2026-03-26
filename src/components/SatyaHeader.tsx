@@ -6,6 +6,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import Link from "next/link";
 import { useTabs } from "@/contexts/TabContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { T } from "./TranslatedText";
 
 export function SatyaHeader() {
     const {
@@ -136,11 +137,11 @@ export function SatyaHeader() {
                     {/* Left: Skip to Content & Screen Reader Access */}
                     <div className="flex items-center gap-4">
                         <a href="#main-content" className="hover:underline focus:ring-2 focus:ring-blue-500 outline-none">
-                            मुख्य सामग्री पर जाएं | Skip to Main Content
+                            मुख्य सामग्री पर जाएं | <T>Skip to Main Content</T>
                         </a>
                         <span className="opacity-30">|</span>
                         <Link href="/screen-reader-access" className="hover:underline focus:ring-2 focus:ring-blue-500 outline-none">
-                            स्क्रीन रीडर एक्सेस | Screen Reader Access
+                            स्क्रीन रीडर एक्सेस | <T>Screen Reader Access</T>
                         </Link>
                     </div>
 
@@ -188,17 +189,21 @@ export function SatyaHeader() {
                     {/* Left: Branding Section */}
                     <div className="flex items-center gap-4">
                         <Link href="/" className="flex items-center gap-4">
-                            <img src="/emblem.png" alt="Emblem" className="h-14 w-auto object-contain" />
+                            <img
+                                src="/emblem.png"
+                                alt="State Emblem of India"
+                                className="h-14 w-auto object-contain"
+                            />
                             <div className="flex flex-col border-l pl-4 border-gray-200">
                                 <span className={`text-[10px] md:text-sm font-semibold leading-none mb-1 uppercase tracking-tight ${isHighContrast ? 'text-white' : 'text-gray-600'}`}>
-                                    भारत सरकार | Government of India
+                                    भारत सरकार | <T>Government of India</T>
                                 </span>
                                 <div className="flex flex-col">
                                     <h1 className={`font-black text-2xl md:text-4xl leading-tight tracking-tighter ${isHighContrast ? 'text-white' : 'text-[#003366]'}`}>
                                         S.A.T.Y.A
                                     </h1>
                                     <span className={`text-[10px] md:text-[12px] font-bold uppercase tracking-wider ${isHighContrast ? 'text-gray-300' : 'text-blue-600'}`}>
-                                        भारत निर्वाचन आयोग | Election Commission of India
+                                        भारत निर्वाचन आयोग | <T>Election Commission of India</T>
                                     </span>
                                 </div>
                             </div>
@@ -208,9 +213,9 @@ export function SatyaHeader() {
                     {/* Right: Digital India & Quick Actions */}
                     <div className="hidden lg:flex items-center gap-8">
                         <img
-                            src="https://www.meity.gov.in/writereaddata/files/digital-india-logo.png"
+                            src="/digital-india.png"
                             alt="Digital India"
-                            className={`h-10 w-auto ${isHighContrast ? 'grayscale invert' : 'opacity-80'}`}
+                            className={`h-28 w-auto ${isHighContrast ? 'grayscale invert' : 'opacity-80'}`}
                         />
                         <div className={`flex items-center gap-4 border-l pl-8 ${isHighContrast ? 'border-yellow-400' : 'border-gray-200'}`}>
                             <button
@@ -226,7 +231,10 @@ export function SatyaHeader() {
             </div>
 
             {/* Bottom Bar: Horizontal Navigation with Dropdowns */}
-            <nav className={`${isHighContrast ? 'bg-black border-t border-yellow-400' : 'bg-[#003366]'} text-white overflow-visible`}>
+            <nav
+                aria-label="Main Navigation"
+                className={`${isHighContrast ? 'bg-black border-t border-yellow-400' : 'bg-[#003366]'} text-white overflow-visible`}
+            >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center no-scrollbar">
                         {navItems.map((item) => (
@@ -252,7 +260,7 @@ export function SatyaHeader() {
                                         : 'border-transparent'
                                         }`}
                                 >
-                                    {item.label}
+                                    <T>{item.label}</T>
                                     {item.subItems && (
                                         <ChevronDown
                                             className={`w-3 h-3 transition-transform ${openDropdown === item.id ? 'rotate-180' : ''}`}
@@ -295,7 +303,7 @@ export function SatyaHeader() {
                                                         (item.id === 'margin' && marginSubTab === sub.id)
                                                     ) ? 'border-[#003366] bg-gray-50 text-[#003366]' : 'border-transparent'}`}
                                                 >
-                                                    {sub.label}
+                                                    <T>{sub.label}</T>
                                                 </Link>
                                             ))}
                                         </motion.div>

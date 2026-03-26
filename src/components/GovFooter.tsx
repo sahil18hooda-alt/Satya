@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Facebook, Twitter, Youtube, Mail, Phone, ExternalLink } from "lucide-react";
+import { T } from "./TranslatedText";
 
 export function GovFooter() {
     const currentYear = new Date().getFullYear();
@@ -33,16 +34,20 @@ export function GovFooter() {
                     {/* Column 1: Portal About */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                            <img src="/emblem.png" alt="Emblem" className="h-12 w-auto invert" />
+                            <img
+                                src="/emblem.png"
+                                alt="State Emblem of India"
+                                className="h-12 w-auto invert"
+                            />
                             <div className="flex flex-col border-l pl-3 border-slate-700">
                                 <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-                                    Government of India
+                                    <T>Government of India</T>
                                 </span>
                                 <h2 className="text-xl font-black tracking-tight">S.A.T.Y.A</h2>
                             </div>
                         </div>
                         <p className="text-slate-400 text-sm leading-relaxed">
-                            System for Advanced Truth & Yield Analysis. An official initiative for transparent and accessible election insights.
+                            <T>System for Advanced Truth & Yield Analysis. An official initiative for transparent and accessible election insights.</T>
                         </p>
                         <div className="flex items-center gap-3 pt-2">
                             <Link href="#" className="p-2 bg-slate-800 rounded-full hover:bg-blue-600 transition-colors">
@@ -67,7 +72,7 @@ export function GovFooter() {
                                 <li key={link.label}>
                                     <Link href={link.href} className="text-slate-300 hover:text-white text-sm flex items-center gap-2 group transition-all">
                                         <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" />
-                                        {link.label}
+                                        <T>{link.label}</T>
                                     </Link>
                                 </li>
                             ))}
@@ -133,7 +138,7 @@ export function GovFooter() {
                         {legalLinks.map((link) => (
                             <li key={link.label}>
                                 <Link href={link.href} className="hover:text-white hover:underline transition-colors">
-                                    {link.label}
+                                    <T>{link.label}</T>
                                 </Link>
                             </li>
                         ))}
@@ -146,10 +151,10 @@ export function GovFooter() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex flex-col md:items-start items-center gap-2">
                         <p className="text-slate-500 text-xs text-center md:text-left">
-                            © {currentYear} S.A.T.Y.A Portal. Content owned, updated and maintained by the Election Commission of India.
+                            © {currentYear} S.A.T.Y.A Portal. <T>Content owned, updated and maintained by the Election Commission of India.</T>
                         </p>
-                        <p className="text-slate-600 text-[10px]">
-                            Last Updated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} | Developed by Advanced Agentic Coding Team
+                        <p className="text-slate-600 text-[10px]" aria-label="Website Last Updated Date">
+                            <T>Last Updated</T>: <span className="sr-only">on</span> {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} | <T>Developed by Advanced Agentic Coding Team</T>
                         </p>
                     </div>
                 </div>

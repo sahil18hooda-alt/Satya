@@ -78,7 +78,7 @@ export function ElectionNews() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {news.map((item, i) => (
-                        <div key={i} className="bg-white border text-card-foreground rounded-none overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
+                        <div key={i} className="bg-gradient-to-br from-orange-50 via-white to-green-50 border text-card-foreground rounded-none overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
                             <div className="h-48 relative overflow-hidden bg-slate-100">
                                 {/* Real Image from backend based on category */}
                                 <img

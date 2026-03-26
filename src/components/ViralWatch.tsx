@@ -1,4 +1,5 @@
 import { Share2, Flame, Filter } from "lucide-react";
+import { T } from "./TranslatedText";
 
 const MYTHS = [
     {
@@ -30,14 +31,14 @@ interface ViralWatchProps {
 
 export function ViralWatch({ onMythClick }: ViralWatchProps) {
     return (
-        <div className="bg-white border text-card-foreground rounded-none shadow-sm p-6">
+        <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 border text-card-foreground rounded-none shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="flex items-center gap-2 font-bold text-lg">
                         <span className="w-2 h-2 rounded-none bg-red-500 animate-pulse" />
-                        Viral Watch
+                        <T>Viral Watch</T>
                     </h3>
-                    <p className="text-xs text-muted-foreground">Top debunked myths circulating now</p>
+                    <p className="text-xs text-muted-foreground"><T>Top debunked myths circulating now</T></p>
                 </div>
                 <button className="p-2 hover:bg-muted rounded-none">
                     <Filter className="w-4 h-4 text-muted-foreground" />
@@ -53,21 +54,21 @@ export function ViralWatch({ onMythClick }: ViralWatchProps) {
                     >
                         <div className="flex justify-between items-start mb-2">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-none ${myth.tagColor}`}>
-                                {myth.tag}
+                                <T>{myth.tag}</T>
                             </span>
                             {myth.trending && (
                                 <span className="flex items-center gap-1 text-[10px] font-medium text-orange-500">
-                                    Trending <Flame className="w-3 h-3 fill-orange-500" />
+                                    <T>Trending</T> <Flame className="w-3 h-3 fill-orange-500" />
                                 </span>
                             )}
                         </div>
                         <h4 className="font-semibold text-sm mb-3 leading-snug">
-                            {myth.title}
+                            <T>{myth.title}</T>
                         </h4>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Share2 className="w-3 h-3" />
-                                Shared {myth.shares} times
+                                <T>Shared</T> {myth.shares} <T>times</T>
                             </div>
                         </div>
                     </div>
@@ -75,7 +76,7 @@ export function ViralWatch({ onMythClick }: ViralWatchProps) {
             </div>
 
             <button className="w-full mt-4 text-sm font-semibold text-blue-600 py-2 hover:bg-blue-50 rounded-none transition-colors">
-                View All Trends
+                <T>View All Trends</T>
             </button>
         </div>
     );
