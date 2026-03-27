@@ -38,9 +38,7 @@ export default function NewsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.15 }}
                 >
-                    <div id="news-newsroom" className={`bg-white/80 backdrop-blur-sm border border-slate-200 p-6 ${newsSubTab === 'newsroom' ? 'ring-2 ring-primary' : ''}`}>
-                        <ElectionNews />
-                    </div>
+                    <ElectionNews />
                 </motion.div>
             </div>
         </main>
