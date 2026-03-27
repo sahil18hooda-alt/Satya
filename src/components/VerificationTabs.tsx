@@ -55,7 +55,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
     };
 
     return (
-        <div className="bg-gradient-to-br from-orange-50 via-white to-green-50 rounded-none shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-sm rounded-none shadow-sm border border-slate-200 overflow-hidden">
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-100">
                 <button
@@ -90,7 +90,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                 </button>
             </div>
             {/* Content Area */}
-            <div className="min-h-[200px] relative">
+            <div className="min-h-[200px] relative p-5">
                 <AnimatePresence mode="wait">
                     {activeTab === 'text' && (
                         <motion.div
@@ -182,7 +182,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
             </div>
 
             {/* Footer Actions */}
-            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-6">
+            <div className="mx-5 mb-5 mt-4 pt-5 border-t border-slate-100 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-400">
                         <Lock className="w-3 h-3" />
@@ -198,7 +198,7 @@ export function VerificationTabs({ onVerify, isAnalyzing }: VerificationTabsProp
                     <button
                         onClick={handleVerify}
                         disabled={isAnalyzing || !isCaptchaVerified || (activeTab === 'text' && !textInput) || (activeTab === 'image' && !fileInput) || (activeTab === 'url' && !urlInput)}
-                        className="w-full md:w-auto bg-[#1e3a8a] text-white px-8 py-3 rounded-none font-bold hover:bg-[#1e40af] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                        className="w-full md:w-auto bg-gradient-to-r from-[#0B1F4F] to-[#1e3a8a] text-white px-10 py-3 rounded-none font-bold hover:from-[#1e3a8a] hover:to-[#2563eb] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
                     >
                         {isAnalyzing ? (
                             <>

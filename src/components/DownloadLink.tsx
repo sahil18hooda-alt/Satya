@@ -26,7 +26,7 @@ export function DownloadLink({
     className = ""
 }: DownloadLinkProps) {
     return (
-        <div className={`p-4 border border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-3 ${className}`}>
+        <div className={`p-4 border border-gray-200 bg-white/80 backdrop-blur-sm flex flex-col gap-3 ${className}`}>
             <div className="flex items-start justify-between gap-4">
                 <div className="flex flex-col gap-1">
                     <h4 className="font-bold text-gray-900 leading-tight">
