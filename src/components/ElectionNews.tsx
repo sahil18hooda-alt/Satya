@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, ArrowRight, Share2, Tag, Globe, Clock, ExternalLink, TrendingUp, Flame } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Calendar, ArrowRight, Share2, Tag, Globe, Clock, ExternalLink, TrendingUp, Flame, Loader2 } from "lucide-react";
 import { useTabs } from "@/contexts/TabContext";
+import { useLanguage, INDIAN_LANGUAGES } from "@/contexts/LanguageContext";
 import { T } from "./TranslatedText";
-import { motion } from "framer-motion";
-
-const LANGUAGES = [
-    "English", "Hindi", "Tamil", "Telugu", "Bengali", "Marathi",
-    "Gujarati", "Kannada", "Malayalam", "Punjabi", "Odia", "Urdu"
-];
+import { motion, AnimatePresence } from "framer-motion";
 
 const CATEGORIES = ["All", "Official", "Analysis", "Security", "Campaign", "Legal", "Fact Check"];
 
-const NEWS_DATA = [
+interface NewsItem {
+    headline: string;
+    summary: string;
+    source: string;
+    date: string;
+    category: string;
+    trending: boolean;
+    image: string;
+}
+
+const NEWS_DATA_EN: NewsItem[] = [
     {
         headline: "Election Commission Announces Dates for 2026 General Elections",
         summary: "The ECI has finalized the schedule for the upcoming general elections, spanning 7 phases starting from April 15th. Over 97 crore eligible voters will participate in what is being called the largest democratic exercise in history.",
@@ -81,16 +87,54 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function ElectionNews() {
     const { newsSubTab: subTab } = useTabs();
-    const [language, setLanguage] = useState("English");
+    const { currentLanguage, setLanguage, translateNow } = useLanguage();
     const [activeCategory, setActiveCategory] = useState("All");
+    const [newsData, setNewsData] = useState<NewsItem[]>(NEWS_DATA_EN);
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    // Translate all news when language changes
+    useEffect(() => {
+        if (currentLanguage === 'en') {
+            setNewsData(NEWS_DATA_EN);
+            return;
+        }
+
+        let cancelled = false;
+        const translateAll = async () => {
+            setIsTranslating(true);
+            try {
+                const translated = await Promise.all(
+                    NEWS_DATA_EN.map(async (item) => {
+                        const [headline, summary] = await Promise.all([
+                            translateNow(item.headline),
+                            translateNow(item.summary),
+                        ]);
+                        return { ...item, headline, summary };
+                    })
+                );
+                if (!cancelled) {
+                    setNewsData(translated);
+                }
+            } catch (e) {
+                console.error("News translation failed:", e);
+                if (!cancelled) setNewsData(NEWS_DATA_EN);
+            } finally {
+                if (!cancelled) setIsTranslating(false);
+            }
+        };
+
+        translateAll();
+        return () => { cancelled = true; };
+    }, [currentLanguage, translateNow]);
 
     const filteredNews = activeCategory === "All"
-        ? NEWS_DATA
-        : NEWS_DATA.filter(item => item.category === activeCategory);
+        ? newsData
+        : newsData.filter(item => item.category === activeCategory);
 
-    // Featured story is the first trending one
-    const featuredStory = NEWS_DATA.find(n => n.trending) || NEWS_DATA[0];
+    const featuredStory = newsData.find(n => n.trending) || newsData[0];
     const remainingNews = filteredNews.filter(n => n !== featuredStory);
+
+    const langName = INDIAN_LANGUAGES.find(l => l.code === currentLanguage)?.name || 'English';
 
     return (
         <div className="w-full space-y-8">
@@ -113,20 +157,37 @@ export function ElectionNews() {
                     ))}
                 </div>
 
-                {/* Language Selector */}
+                {/* Language Selector — wired to global context */}
                 <div className="bg-white border border-slate-200 p-1.5 pl-3 flex items-center gap-2 shadow-sm">
                     <Globe className="w-3.5 h-3.5 text-slate-400" />
                     <select
-                        value={language}
+                        value={currentLanguage}
                         onChange={(e) => setLanguage(e.target.value)}
                         className="bg-transparent border-none text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-6"
                     >
-                        {LANGUAGES.map(lang => (
-                            <option key={lang} value={lang}>{lang}</option>
+                        {INDIAN_LANGUAGES.map(lang => (
+                            <option key={lang.code} value={lang.code}>{lang.name}</option>
                         ))}
                     </select>
                 </div>
             </div>
+
+            {/* Translation Progress Banner */}
+            <AnimatePresence>
+                {isTranslating && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center justify-center gap-3 bg-blue-50 border border-blue-200 py-3 px-4"
+                    >
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                        <p className="text-sm font-semibold text-blue-700">
+                            Translating news to <span className="text-blue-900">{langName}</span>...
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Featured Story */}
             {activeCategory === "All" && (
@@ -172,7 +233,7 @@ export function ElectionNews() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(activeCategory === "All" ? remainingNews : filteredNews).map((item, i) => (
                     <motion.div
-                        key={i}
+                        key={`${currentLanguage}-${i}`}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: i * 0.08 }}
