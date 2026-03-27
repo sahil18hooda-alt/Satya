@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Mic, MicOff, Volume2, Loader2, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,7 +10,16 @@ interface Message {
     timestamp: Date;
 }
 
-import { useTabs, VoiceSubTabType } from "@/contexts/TabContext";
+// Extend Window for webkit speech recognition and audio context
+interface IWindow extends Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+    AudioContext: typeof AudioContext;
+    webkitAudioContext: typeof AudioContext;
+}
+declare const window: IWindow;
+
+import { useTabs } from "@/contexts/TabContext";
 
 export function VoiceAssistant() {
     const { voiceSubTab: subTab } = useTabs();
@@ -21,19 +30,36 @@ export function VoiceAssistant() {
     const [detectedLanguage, setDetectedLanguage] = useState("en-IN");
     const [error, setError] = useState("");
 
+    // Live transcription state
+    const [liveTranscript, setLiveTranscript] = useState("");
+    const [interimTranscript, setInterimTranscript] = useState("");
+    const [liveWords, setLiveWords] = useState<string[]>([]);
+    const [processingStatus, setProcessingStatus] = useState("");
+
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const liveTranscriptRef = useRef("");
+    const interimTranscriptRef = useRef("");
     const audioChunksRef = useRef<Blob[]>([]);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    
+    const streamRef = useRef<MediaStream | null>(null);
+
     // Audio Queue Logic
     const audioQueueRef = useRef<string[]>([]);
     const isPlayingQueueRef = useRef(false);
-    
+
     // VAD Logic
     const vadIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
 
-    const playNextInQueue = () => {
+    // Speech Recognition
+    const recognitionRef = useRef<any>(null);
+    const isRecordingRef = useRef(false);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        isRecordingRef.current = isRecording;
+    }, [isRecording]);
+
+    const playNextInQueue = useCallback(() => {
         if (audioQueueRef.current.length === 0) {
             isPlayingQueueRef.current = false;
             setIsSpeaking(false);
@@ -43,17 +69,87 @@ export function VoiceAssistant() {
         setIsSpeaking(true);
         const audioBase64 = audioQueueRef.current.shift();
         if (!audioBase64) { playNextInQueue(); return; }
-        
+
         const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
         audio.onended = playNextInQueue;
         audio.play().catch(e => {
             console.error("Queue playback error", e);
             playNextInQueue();
         });
-    };
+    }, []);
 
-    const startVAD = (stream: MediaStream) => {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // --- Web Speech API for live transcription ---
+    const startSpeechRecognition = useCallback(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn("Web Speech API not supported in this browser");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-IN"; // Default, auto-detects most languages
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event: any) => {
+            let interim = "";
+            let final = "";
+            const allWords: string[] = [];
+
+            for (let i = 0; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    final += transcript + " ";
+                } else {
+                    interim = transcript;
+                }
+                // Split into words for animation
+                const words = transcript.trim().split(/\s+/);
+                allWords.push(...words);
+            }
+
+            setLiveTranscript(final.trim());
+            liveTranscriptRef.current = final.trim();
+            setInterimTranscript(interim);
+            interimTranscriptRef.current = interim;
+            setLiveWords(allWords.filter(w => w.length > 0));
+        };
+
+        recognition.onerror = (event: any) => {
+            // Silently handle — this is just visual feedback
+            if (event.error !== "no-speech" && event.error !== "aborted") {
+                console.warn("Speech recognition error:", event.error);
+            }
+        };
+
+        recognition.onend = () => {
+            // Auto-restart if still recording (recognition can timeout)
+            if (isRecordingRef.current) {
+                try { recognition.start(); } catch (e) { /* ignore */ }
+            }
+        };
+
+        try {
+            recognition.start();
+            recognitionRef.current = recognition;
+        } catch (e) {
+            console.warn("Could not start speech recognition:", e);
+        }
+    }, []);
+
+    const stopSpeechRecognition = useCallback(() => {
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch (e) { /* ignore */ }
+            recognitionRef.current = null;
+        }
+    }, []);
+
+    const startVAD = useCallback((stream: MediaStream) => {
+        // Reuse existing AudioContext if available
+        const audioContext = audioContextRef.current && audioContextRef.current.state !== "closed"
+            ? audioContextRef.current
+            : new (window.AudioContext || (window as any).webkitAudioContext)();
         const source = audioContext.createMediaStreamSource(stream);
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
@@ -71,7 +167,8 @@ export function VoiceAssistant() {
             const average = sum / bufferLength;
 
             if (average < threshold) {
-                if (Date.now() - silenceStart > 1500) {
+                // Reduced from 1500ms to 1000ms for faster auto-stop
+                if (Date.now() - silenceStart > 1000) {
                     stopRecording();
                     return;
                 }
@@ -83,11 +180,12 @@ export function VoiceAssistant() {
 
         audioContextRef.current = audioContext;
         checkSilence();
-    };
+    }, []);
 
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
             const mediaRecorder = new MediaRecorder(stream, {
                 mimeType: "audio/webm;codecs=opus",
             });
@@ -98,15 +196,39 @@ export function VoiceAssistant() {
             };
 
             mediaRecorder.onstop = async () => {
+                // Stop speech recognition
+                stopSpeechRecognition();
+
+                // Immediately show what was captured as a user message (blue bubble)
+                const capturedText = (liveTranscriptRef.current + " " + interimTranscriptRef.current).trim();
+                if (capturedText) {
+                    setMessages(prev => [...prev, {
+                        role: "user",
+                        content: capturedText,
+                        timestamp: new Date()
+                    }]);
+                }
+                setProcessingStatus("Recognizing speech...");
+
                 const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-                await sendAudioToBackend(audioBlob);
+                await sendAudioToBackend(audioBlob, !!capturedText);
+
+                // Cleanup stream
                 stream.getTracks().forEach((track) => track.stop());
-                if (audioContextRef.current) audioContextRef.current.close();
+                streamRef.current = null;
             };
 
             mediaRecorderRef.current = mediaRecorder;
-            mediaRecorder.start();
+            // Use timeslice of 250ms for faster chunk assembly
+            mediaRecorder.start(250);
             startVAD(stream);
+
+            // Start live speech recognition in parallel
+            setLiveTranscript("");
+            setInterimTranscript("");
+            setLiveWords([]);
+            startSpeechRecognition();
+
             setIsRecording(true);
             setError("");
         } catch (err) {
@@ -116,17 +238,17 @@ export function VoiceAssistant() {
     };
 
     const stopRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
+        if (mediaRecorderRef.current && isRecordingRef.current) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
             if (vadIntervalRef.current) clearTimeout(vadIntervalRef.current);
         }
     };
 
-    const sendAudioToBackend = async (audioBlob: Blob) => {
+    const sendAudioToBackend = async (audioBlob: Blob, hasPreviewMessage: boolean = false) => {
         setIsProcessing(true);
-        audioQueueRef.current = []; // Clear queue for new interaction
-        
+        audioQueueRef.current = [];
+
         try {
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
@@ -146,6 +268,11 @@ export function VoiceAssistant() {
                 if (!response.ok) throw new Error("Voice processing failed");
                 if (!response.body) return;
 
+                // Clear live transcript once backend starts responding
+                setLiveTranscript("");
+                setInterimTranscript("");
+                setLiveWords([]);
+
                 const streamReader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = "";
@@ -160,29 +287,48 @@ export function VoiceAssistant() {
 
                     for (const line of lines) {
                         if (!line.trim()) continue;
-                        const data = JSON.parse(line);
+                        try {
+                            const data = JSON.parse(line);
 
-                        if (data.type === "detection") {
-                            setMessages(prev => [...prev, { role: "user", content: data.text, timestamp: new Date() }]);
-                            setDetectedLanguage(data.language);
-                        } else if (data.type === "chunk") {
-                            // Update assistant message text cumulatively
-                            setMessages(prev => {
-                                const newMessages = [...prev];
-                                const lastMsg = newMessages[newMessages.length - 1];
-                                if (lastMsg && lastMsg.role === "assistant") {
-                                    lastMsg.content += " " + data.text;
-                                    return newMessages;
+                            if (data.type === "detection") {
+                                // Update the preview message with authoritative STT text,
+                                // or add a new one if no preview was shown
+                                if (hasPreviewMessage) {
+                                    setMessages(prev => {
+                                        const updated = [...prev];
+                                        // Find the last user message and update it
+                                        for (let i = updated.length - 1; i >= 0; i--) {
+                                            if (updated[i].role === "user") {
+                                                updated[i].content = data.text;
+                                                break;
+                                            }
+                                        }
+                                        return updated;
+                                    });
                                 } else {
-                                    return [...prev, { role: "assistant", content: data.text, timestamp: new Date() }];
+                                    setMessages(prev => [...prev, { role: "user", content: data.text, timestamp: new Date() }]);
                                 }
-                            });
+                                setDetectedLanguage(data.language);
+                                setProcessingStatus("Generating response...");
+                            } else if (data.type === "chunk") {
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    const lastMsg = newMessages[newMessages.length - 1];
+                                    if (lastMsg && lastMsg.role === "assistant") {
+                                        lastMsg.content += " " + data.text;
+                                        return [...newMessages];
+                                    } else {
+                                        return [...prev, { role: "assistant", content: data.text, timestamp: new Date() }];
+                                    }
+                                });
 
-                            // Add to playback queue
-                            if (data.audio) {
-                                audioQueueRef.current.push(data.audio);
-                                if (!isPlayingQueueRef.current) playNextInQueue();
+                                if (data.audio) {
+                                    audioQueueRef.current.push(data.audio);
+                                    if (!isPlayingQueueRef.current) playNextInQueue();
+                                }
                             }
+                        } catch (parseErr) {
+                            console.warn("Failed to parse stream line:", line);
                         }
                     }
                 }
@@ -191,13 +337,31 @@ export function VoiceAssistant() {
             setError(err.message || "Failed to process voice");
         } finally {
             setIsProcessing(false);
+            setProcessingStatus("");
         }
     };
 
     const clearConversation = () => {
         setMessages([]);
         setError("");
+        setLiveTranscript("");
+        setInterimTranscript("");
+        setLiveWords([]);
+        setProcessingStatus("");
     };
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            stopSpeechRecognition();
+            if (vadIntervalRef.current) clearTimeout(vadIntervalRef.current);
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(t => t.stop());
+            }
+        };
+    }, [stopSpeechRecognition]);
+
+    const fullLiveText = liveTranscript + (interimTranscript ? " " + interimTranscript : "");
 
     return (
         <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -255,13 +419,58 @@ export function VoiceAssistant() {
                     {/* Status Text */}
                     <p className="text-lg font-medium text-slate-700">
                         {isProcessing
-                            ? "Processing your voice..."
+                            ? (processingStatus || "Processing your voice...")
                             : isSpeaking
                                 ? "Speaking..."
                                 : isRecording
                                     ? "Listening... (Click to stop)"
                                     : "Click to speak"}
                     </p>
+
+                    {/* Live Transcription Display */}
+                    <AnimatePresence>
+                        {(isRecording || (isProcessing && liveWords.length > 0)) && liveWords.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="w-full max-w-lg"
+                            >
+                                <div className="bg-white/80 backdrop-blur-sm border-2 border-blue-200 rounded-lg px-5 py-4 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                        </span>
+                                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Live Capture</span>
+                                    </div>
+                                    <p className="text-base text-slate-800 leading-relaxed min-h-[1.5rem]">
+                                        {liveWords.map((word, i) => (
+                                            <motion.span
+                                                key={`${i}-${word}`}
+                                                initial={{ opacity: 0, y: 4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.3) }}
+                                                className={`inline-block mr-1 ${i >= liveWords.length - (interimTranscript.trim().split(/\s+/).length || 0)
+                                                    ? "text-blue-500"
+                                                    : "text-slate-800"
+                                                    }`}
+                                            >
+                                                {word}
+                                            </motion.span>
+                                        ))}
+                                        {isRecording && (
+                                            <motion.span
+                                                animate={{ opacity: [1, 0] }}
+                                                transition={{ repeat: Infinity, duration: 0.8 }}
+                                                className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 align-middle"
+                                            />
+                                        )}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Error Message */}
                     {error && (
@@ -318,8 +527,8 @@ export function VoiceAssistant() {
                 <p className="font-semibold mb-2">How to use:</p>
                 <ul className="list-disc list-inside space-y-1">
                     <li>Click the microphone to start speaking</li>
-                    <li>Speak your question in any Indian language</li>
-                    <li>Click again to stop and process your voice</li>
+                    <li>Watch your words appear in real-time as you speak</li>
+                    <li>Recording auto-stops after 1 second of silence</li>
                     <li>Listen to the AI response in your language</li>
                 </ul>
             </div>

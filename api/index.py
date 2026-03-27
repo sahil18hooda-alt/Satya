@@ -1,12 +1,12 @@
 import os
+import re
 import json
-import typing
 import typing
 import tempfile
 import base64
 import io
 from fastapi import FastAPI, HTTPException, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from gtts import gTTS
 from pydantic import BaseModel
@@ -588,6 +588,102 @@ class VoiceChatResponse(BaseModel):
     text_response: str
     audio_base64: str
     detected_language: str
+
+async def get_sarvam_tts_vercel(text: str, lang: str):
+    """Helper to get TTS from Sarvam AI"""
+    if not SARVAM_API_KEY:
+        return ""
+    async with httpx.AsyncClient() as client:
+        tts_payload = {
+            "inputs": [text],
+            "target_language_code": lang,
+            "speaker": "anushka",
+            "model": "bulbul:v2"
+        }
+        headers = {
+            "api-subscription-key": SARVAM_API_KEY,
+            "Content-Type": "application/json"
+        }
+        try:
+            tts_response = await client.post(SARVAM_TTS_URL, headers=headers, json=tts_payload)
+            if tts_response.status_code == 200:
+                return tts_response.json().get("audios", [""])[0]
+        except Exception as e:
+            print(f"TTS Error: {e}")
+    return ""
+
+@app.post("/voice/stream")
+async def voice_stream(request: VoiceChatRequest):
+    """
+    Streaming voice interaction:
+    Sarvam STT -> Gemini Stream -> Sentence-based Sarvam TTS -> Yield chunks
+    """
+    try:
+        if not SARVAM_API_KEY:
+            return JSONResponse({"error": "Sarvam API Key not configured"}, status_code=500)
+
+        # 1. Speech-to-Text
+        audio_content = base64.b64decode(request.audio_base64)
+        async with httpx.AsyncClient() as client:
+            files = {"file": ("audio.webm", audio_content, "audio/webm")}
+            headers = {"api-subscription-key": SARVAM_API_KEY}
+            stt_response = await client.post(
+                SARVAM_STT_URL, headers=headers, files=files,
+                data={"model": "saarika:v2.5", "language_code": "unknown"}
+            )
+            if stt_response.status_code != 200:
+                # Fallback
+                stt_response = await client.post(
+                    "https://api.sarvam.ai/speech-to-text-translate",
+                    headers=headers, files=files, data={"model": "saaras:v1"}
+                )
+                if stt_response.status_code != 200:
+                    return JSONResponse({"error": "Speech-to-Text failed"}, status_code=500)
+
+            stt_data = stt_response.json()
+            detected_text = stt_data.get("transcript", "")
+            detected_lang = stt_data.get("language_code", "en-IN")
+
+        if not detected_text:
+            return JSONResponse({"error": "No speech detected"}, status_code=400)
+
+        async def event_generator():
+            # Initial detection info
+            yield json.dumps({
+                "type": "detection",
+                "text": detected_text,
+                "language": detected_lang
+            }) + "\n"
+
+            # 2. Build context
+            conversation_context = ""
+            for msg in request.conversation_history[-5:]:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                conversation_context += f"{role}: {msg.get('content', '')}\n"
+
+            prompt = f"{conversation_context}\nUser ({detected_lang}): {detected_text}\nAssistant:"
+
+            # 3. Generate with Gemini (non-streaming, then split into sentences)
+            ai_response = voice_model.generate_content(prompt)
+            response_text = ai_response.text.strip()
+
+            # Split into sentences and stream each with TTS
+            sentences = re.split(r'(?<=[.!?])\s+', response_text)
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if sentence:
+                    audio = await get_sarvam_tts_vercel(sentence, detected_lang)
+                    yield json.dumps({
+                        "type": "chunk",
+                        "text": sentence,
+                        "audio": audio
+                    }) + "\n"
+
+        return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+
+    except Exception as e:
+        print(f"Streaming Error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/voice/chat", response_model=VoiceChatResponse)
 async def voice_chat(request: VoiceChatRequest):
