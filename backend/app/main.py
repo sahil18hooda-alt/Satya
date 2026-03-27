@@ -410,9 +410,10 @@ async def voice_stream(request: VoiceChatRequest):
 
             # 3. Stream Groq & Buffer Sentences
             buffer = ""
+            word_count = 0
             
             stream = groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model="llama-3.1-8b-instant",
                 messages=conversation_messages,
                 stream=True
             )
@@ -420,15 +421,22 @@ async def voice_stream(request: VoiceChatRequest):
             for chunk in stream:
                 content = chunk.choices[0].delta.content or ""
                 buffer += content
+                word_count += len(content.split())
 
-                # Sentence detection (period, exclamation, question, or newline)
-                if any(p in buffer for p in [". ", "! ", "? ", "\n"]):
-                    # Find the last punctuation index
+                # Sentence detection OR word limit for faster initial response
+                if any(p in buffer for p in [". ", "! ", "? ", "\n"]) or word_count >= 15:
+                    # Find the last punctuation or just a space if we hit word limit
                     match = re.search(r'([.!?\n])\s+', buffer)
-                    if match:
-                        end_idx = match.end()
+                    if match or (word_count >= 15 and " " in buffer):
+                        if match:
+                            end_idx = match.end()
+                        else:
+                            # Split at last space for word limit
+                            end_idx = buffer.rindex(" ") + 1
+                        
                         sentence = buffer[:end_idx].strip()
                         buffer = buffer[end_idx:]
+                        word_count = 0
 
                         if sentence:
                             audio = await get_sarvam_tts(sentence, detected_lang)

@@ -335,6 +335,7 @@ export function VoiceAssistant() {
             };
         } catch (err: any) {
             setError(err.message || "Failed to process voice");
+            console.error("Voice processing error:", err);
         } finally {
             setIsProcessing(false);
             setProcessingStatus("");
