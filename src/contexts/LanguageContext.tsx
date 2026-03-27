@@ -49,9 +49,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            // Use relative URL for Next.js rewrite or direct localhost during dev if needed
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-            const res = await fetch(`${apiUrl}/translate`, {
+            // Use the Next.js API route (Groq-powered) — works in both dev and production
+            const res = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text, target_language: currentLanguage })
