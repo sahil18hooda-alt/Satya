@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Puzzle, Shield, Zap, Users, ArrowRight } from "lucide-react";
+import { Puzzle, Shield, Zap, Users, ArrowRight, History as LucideHistory } from "lucide-react";
+import Link from "next/link";
 import { StatsCard } from "@/components/StatsCard";
 import { ViralWatch } from "@/components/ViralWatch";
 import { VerificationTabs } from "@/components/VerificationTabs";
@@ -113,6 +114,22 @@ export default function Home() {
               </span>
             ))}
           </motion.div>
+
+          {/* New Feature Spotlight CTA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-8"
+          >
+            <Link 
+              href="/story" 
+              className="inline-flex items-center gap-3 bg-[#0B1F4F] text-white px-6 py-3.5 font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-xl group"
+            >
+              <T>Build My Election Story</T>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Main Content: Rumor Buster Grid */}
@@ -143,6 +160,20 @@ export default function Home() {
                 format="ZIP / Chrome Extension"
                 instructions="1. Download the ZIP file. 2. Extract it to a folder. 3. Open Chrome Extensions. 4. Enable 'Developer Mode' and 'Load Unpacked'."
               />
+              <div className="bg-white/80 backdrop-blur-md border border-slate-200 p-5 flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-[#0B1F4F] transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-50 text-[#0B1F4F]">
+                    <LucideHistory className="w-6 h-6" />
+                  </div>
+                  <div>
+                     <h4 className="font-black text-slate-900 uppercase text-xs tracking-wider"><T>My Election Story</T></h4>
+                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter"><T>Interactive Personalized Timeline</T></p>
+                  </div>
+                </div>
+                <Link href="/story" className="w-full md:w-auto px-6 py-2 bg-slate-100 text-[#0B1F4F] font-black text-[10px] uppercase tracking-widest hover:bg-[#0B1F4F] hover:text-white transition-all text-center">
+                  <T>Try Now</T>
+                </Link>
+              </div>
             </div>
 
             <AnimatePresence>

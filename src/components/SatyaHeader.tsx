@@ -78,6 +78,7 @@ export function SatyaHeader() {
             id: 'game',
             label: 'Civic Game',
             subItems: [
+                { id: 'story', label: 'My Election Story', setter: null },
                 { id: 'ONOE', label: 'The Grand Sync', setter: setGameSubTab },
                 { id: 'CLUSTER', label: 'Cluster Model', setter: setGameSubTab },
                 { id: 'ROLLING', label: 'Rolling Cycle', setter: setGameSubTab },
@@ -283,7 +284,7 @@ export function SatyaHeader() {
                                             {item.subItems.map((sub, subIdx) => (
                                                 <Link
                                                     key={sub.id}
-                                                    href={item.id === 'rumor' ? '/' : `/${item.id}`}
+                                                    href={sub.id === 'story' ? '/story' : (item.id === 'rumor' ? '/' : `/${item.id}`)}
                                                     onClick={() => {
                                                         setActiveTab(item.id as any);
                                                         const subItem = sub as any;
@@ -294,6 +295,7 @@ export function SatyaHeader() {
                                                     }}
                                                     className={`block w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 hover:text-[#003366] transition-colors border-l-4 focus:outline-none focus:bg-gray-100 ${activeTab === item.id && (
                                                         (item.id === 'rumor' && rumorSubTab === sub.id) ||
+                                                        (sub.id === 'story' && window.location.pathname === '/story') ||
                                                         (item.id === 'logic' && logicSubTab === sub.id) ||
                                                         (item.id === 'deepfake' && deepfakeSubTab === sub.id) ||
                                                         (item.id === 'voice' && voiceSubTab === sub.id) ||
