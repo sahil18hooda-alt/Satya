@@ -32,25 +32,24 @@ export function NotificationTicker({ isHighContrast }: { isHighContrast?: boolea
   const displayItems = [...NOTIFICATIONS, ...NOTIFICATIONS, ...NOTIFICATIONS];
 
   return (
-    <div className={`relative flex items-center h-10 overflow-hidden border-b ${
+    <div className={`relative flex items-center h-10 overflow-hidden border-b font-mukta ${
       isHighContrast 
         ? "bg-black border-yellow-400 text-yellow-400" 
-        : "bg-orange-50/50 border-orange-100 text-slate-700"
+        : "bg-white border-slate-100 text-slate-700 shadow-sm"
     }`}>
       {/* Fixed "Latest Updates" header */}
-      <div className={`z-10 px-4 h-full flex items-center shadow-lg transition-colors ${
+      <div className={`z-10 px-4 h-full flex items-center gap-2 transition-colors border-r ${
         isHighContrast 
-          ? "bg-yellow-400 text-black" 
-          : "bg-[#f97316] text-white"
+          ? "bg-yellow-400 text-black border-black" 
+          : "bg-slate-50 text-[#003366] border-slate-200"
       }`}>
-        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap">
-          <T>Latest Updates</T>
+        <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
         </span>
-        <div className={`absolute -right-3 top-0 h-full w-4 flex items-center justify-center pointer-events-none`}>
-            <div className={`w-0 h-0 border-t-[20px] border-t-transparent border-b-[20px] border-b-transparent border-l-[12px] ${
-                isHighContrast ? "border-l-yellow-400" : "border-l-[#f97316]"
-            }`}></div>
-        </div>
+        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap">
+          <T>Updates</T>
+        </span>
       </div>
 
       {/* The Ticker Track */}
@@ -60,19 +59,19 @@ export function NotificationTicker({ isHighContrast }: { isHighContrast?: boolea
             x: ["0%", "-50%"]
           }}
           transition={{
-            duration: 40,
+            duration: 45,
             repeat: Infinity,
             ease: "linear"
           }}
-          className="flex items-center gap-12 whitespace-nowrap px-8 h-full"
+          className="flex items-center gap-16 whitespace-nowrap px-8 h-full"
         >
           {displayItems.map((note, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <span className="opacity-80">{note.icon}</span>
-              <span className="text-[11px] md:text-sm font-bold tracking-tight">
+            <div key={idx} className="flex items-center gap-2.5">
+              <span className="opacity-90">{note.icon}</span>
+              <span className="text-[11px] md:text-sm font-semibold tracking-tight">
                 <T>{note.text}</T>
               </span>
-              <span className="mx-2 text-gray-300">•</span>
+              <span className="mx-2 text-slate-300 font-light text-lg">|</span>
             </div>
           ))}
         </motion.div>
@@ -80,7 +79,7 @@ export function NotificationTicker({ isHighContrast }: { isHighContrast?: boolea
 
       {/* Right gradient for fade effect */}
       {!isHighContrast && (
-        <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-orange-50/50 to-transparent pointer-events-none z-10" />
+        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
       )}
     </div>
   );
