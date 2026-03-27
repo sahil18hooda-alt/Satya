@@ -2,8 +2,9 @@
 
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { DeepfakeDetective } from "@/components/DeepfakeDetective";
-import { FileVideo } from "lucide-react";
+import { FileVideo, Shield } from "lucide-react";
 import { useTabs } from "@/contexts/TabContext";
+import { motion } from "framer-motion";
 
 export default function DeepfakePage() {
     const { deepfakeSubTab } = useTabs();
@@ -13,7 +14,16 @@ export default function DeepfakePage() {
             <Breadcrumb />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-                <div className="text-left mb-12 border-b-4 border-red-600 pb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-left mb-12 border-b-4 border-red-600 pb-6"
+                >
+                    <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-1 mb-4 text-[10px] font-bold uppercase tracking-widest text-red-700">
+                        <Shield className="w-3 h-3" />
+                        AI-Powered Verification
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-black text-slate-900 flex items-center gap-4">
                         <FileVideo className="w-12 h-12 text-red-600" />
                         Deepfake Detective
@@ -21,11 +31,16 @@ export default function DeepfakePage() {
                     <p className="text-lg text-slate-600 mt-4 max-w-3xl">
                         Identify AI-generated manipulation in election-related videos and audio using advanced Dual-Stream Neural Networks.
                     </p>
-                </div>
+                </motion.div>
 
-                <div className="max-w-3xl mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    className="max-w-3xl mx-auto"
+                >
                     <DeepfakeDetective subTab={deepfakeSubTab} />
-                </div>
+                </motion.div>
             </div>
         </main>
     );

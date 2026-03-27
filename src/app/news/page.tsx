@@ -2,8 +2,9 @@
 
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ElectionNews } from "@/components/ElectionNews";
-import { Globe } from "lucide-react";
+import { Globe, Newspaper } from "lucide-react";
 import { useTabs } from "@/contexts/TabContext";
+import { motion } from "framer-motion";
 
 export default function NewsPage() {
     const { newsSubTab } = useTabs();
@@ -13,7 +14,16 @@ export default function NewsPage() {
             <Breadcrumb />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-                <div className="text-left mb-12 border-b-4 border-slate-900 pb-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-left mb-12 border-b-4 border-slate-900 pb-6"
+                >
+                    <div className="inline-flex items-center gap-2 bg-slate-100 border border-slate-300 px-3 py-1 mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-700">
+                        <Newspaper className="w-3 h-3" />
+                        Verified Sources Only
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-black text-slate-900 flex items-center gap-4">
                         <Globe className="w-12 h-12 text-slate-900" />
                         Election Newsroom
@@ -21,11 +31,17 @@ export default function NewsPage() {
                     <p className="text-lg text-slate-600 mt-4 max-w-3xl">
                         Live updates and analyzed headlines from verified government sources across all Indian states and Union Territories.
                     </p>
-                </div>
+                </motion.div>
 
-                <div id="news-newsroom" className={`bg-gray-50 border p-6 ${newsSubTab === 'newsroom' ? 'ring-2 ring-primary' : ''}`}>
-                    <ElectionNews />
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                >
+                    <div id="news-newsroom" className={`bg-white/80 backdrop-blur-sm border border-slate-200 p-6 ${newsSubTab === 'newsroom' ? 'ring-2 ring-primary' : ''}`}>
+                        <ElectionNews />
+                    </div>
+                </motion.div>
             </div>
         </main>
     );
