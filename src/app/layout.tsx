@@ -50,8 +50,20 @@ export default function RootLayout({
                   JavaScript is disabled in your browser. Some features of the S.A.T.Y.A portal (AI verification, Voice, Contrast mode) require JavaScript to function.
                 </div>
               </noscript>
+              {/* Global Background Image with Overlay */}
+              <div
+                className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat w-full h-full pointer-events-none"
+                style={{
+                  backgroundImage: 'url(/india-voting-bg.jpg)',
+                  opacity: 0.85
+                }}
+              />
+              <div className="fixed inset-0 z-[-1] bg-gradient-to-b from-white/40 via-white/30 to-white/40 w-full h-full pointer-events-none" />
+
               <SatyaHeader />
-              {children}
+              <div className="relative z-0">
+                {children}
+              </div>
               <GovFooter />
             </AccessibilityWrapper>
           </TabProvider>

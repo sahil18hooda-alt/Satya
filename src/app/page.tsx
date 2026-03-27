@@ -55,7 +55,7 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen relative bg-transparent">
+    <main id="main-content" className="min-h-screen bg-transparent relative">
 
       <style jsx global>{`
         @media print {

@@ -5,7 +5,7 @@ import { FileText, Download, UserCheck } from "lucide-react";
 
 export default function RTI() {
     return (
-        <main className="min-h-screen bg-white font-mukta">
+        <main className="min-h-screen bg-transparent font-mukta">
             <Breadcrumb />
 
             <div className="max-w-4xl mx-auto px-4 py-12 md:py-20">

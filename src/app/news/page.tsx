@@ -9,7 +9,7 @@ export default function NewsPage() {
     const { newsSubTab } = useTabs();
 
     return (
-        <main className="min-h-screen bg-white font-mukta pb-20">
+        <main className="min-h-screen bg-transparent font-mukta pb-20">
             <Breadcrumb />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
