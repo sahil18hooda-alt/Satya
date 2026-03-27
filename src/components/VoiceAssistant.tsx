@@ -24,6 +24,66 @@ export function VoiceAssistant() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    
+    // Audio Queue Logic
+    const audioQueueRef = useRef<string[]>([]);
+    const isPlayingQueueRef = useRef(false);
+    
+    // VAD Logic
+    const vadIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+
+    const playNextInQueue = () => {
+        if (audioQueueRef.current.length === 0) {
+            isPlayingQueueRef.current = false;
+            setIsSpeaking(false);
+            return;
+        }
+        isPlayingQueueRef.current = true;
+        setIsSpeaking(true);
+        const audioBase64 = audioQueueRef.current.shift();
+        if (!audioBase64) { playNextInQueue(); return; }
+        
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        audio.onended = playNextInQueue;
+        audio.play().catch(e => {
+            console.error("Queue playback error", e);
+            playNextInQueue();
+        });
+    };
+
+    const startVAD = (stream: MediaStream) => {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        let silenceStart = Date.now();
+        const threshold = 15;
+
+        const checkSilence = () => {
+            if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== "recording") return;
+            analyser.getByteFrequencyData(dataArray);
+            const sum = dataArray.reduce((a, b) => a + b, 0);
+            const average = sum / bufferLength;
+
+            if (average < threshold) {
+                if (Date.now() - silenceStart > 1500) {
+                    stopRecording();
+                    return;
+                }
+            } else {
+                silenceStart = Date.now();
+            }
+            vadIntervalRef.current = setTimeout(checkSilence, 100);
+        };
+
+        audioContextRef.current = audioContext;
+        checkSilence();
+    };
 
     const startRecording = async () => {
         try {
@@ -33,25 +93,24 @@ export function VoiceAssistant() {
             });
 
             audioChunksRef.current = [];
-
             mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
-                }
+                if (event.data.size > 0) audioChunksRef.current.push(event.data);
             };
 
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
                 await sendAudioToBackend(audioBlob);
                 stream.getTracks().forEach((track) => track.stop());
+                if (audioContextRef.current) audioContextRef.current.close();
             };
 
             mediaRecorderRef.current = mediaRecorder;
             mediaRecorder.start();
+            startVAD(stream);
             setIsRecording(true);
             setError("");
         } catch (err) {
-            setError("Microphone access denied. Please enable microphone permissions.");
+            setError("Microphone access denied.");
             console.error("Recording error:", err);
         }
     };
@@ -60,82 +119,79 @@ export function VoiceAssistant() {
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
+            if (vadIntervalRef.current) clearTimeout(vadIntervalRef.current);
         }
     };
 
     const sendAudioToBackend = async (audioBlob: Blob) => {
         setIsProcessing(true);
+        audioQueueRef.current = []; // Clear queue for new interaction
+        
         try {
             const reader = new FileReader();
             reader.readAsDataURL(audioBlob);
             reader.onloadend = async () => {
                 const base64Audio = (reader.result as string).split(",")[1];
+                const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:8000" : process.env.NEXT_PUBLIC_API_URL ?? "";
 
-                const API_URL =
-                    process.env.NODE_ENV === "development"
-                        ? "http://localhost:8000"
-                        : process.env.NEXT_PUBLIC_API_URL ?? "";
-
-                const response = await fetch(`${API_URL}/voice/chat`, {
+                const response = await fetch(`${API_URL}/voice/stream`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         audio_base64: base64Audio,
-                        conversation_history: messages.map((m) => ({
-                            role: m.role,
-                            content: m.content,
-                        })),
+                        conversation_history: messages.map((m) => ({ role: m.role, content: m.content })),
                     }),
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Voice processing failed");
+                if (!response.ok) throw new Error("Voice processing failed");
+                if (!response.body) return;
+
+                const streamReader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+
+                while (true) {
+                    const { done, value } = await streamReader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop() || "";
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        const data = JSON.parse(line);
+
+                        if (data.type === "detection") {
+                            setMessages(prev => [...prev, { role: "user", content: data.text, timestamp: new Date() }]);
+                            setDetectedLanguage(data.language);
+                        } else if (data.type === "chunk") {
+                            // Update assistant message text cumulatively
+                            setMessages(prev => {
+                                const newMessages = [...prev];
+                                const lastMsg = newMessages[newMessages.length - 1];
+                                if (lastMsg && lastMsg.role === "assistant") {
+                                    lastMsg.content += " " + data.text;
+                                    return newMessages;
+                                } else {
+                                    return [...prev, { role: "assistant", content: data.text, timestamp: new Date() }];
+                                }
+                            });
+
+                            // Add to playback queue
+                            if (data.audio) {
+                                audioQueueRef.current.push(data.audio);
+                                if (!isPlayingQueueRef.current) playNextInQueue();
+                            }
+                        }
+                    }
                 }
-
-                const data = await response.json();
-
-                // Add user message (transcribed)
-                const userMessage: Message = {
-                    role: "user",
-                    content: data.text_query,
-                    timestamp: new Date(),
-                };
-
-                // Add assistant response
-                const assistantMessage: Message = {
-                    role: "assistant",
-                    content: data.text_response,
-                    timestamp: new Date(),
-                };
-
-                setMessages((prev) => [...prev, userMessage, assistantMessage]);
-                setDetectedLanguage(data.detected_language);
-
-                // Play audio response
-                playAudioResponse(data.audio_base64);
             };
         } catch (err: any) {
             setError(err.message || "Failed to process voice");
-            console.error("Voice processing error:", err);
         } finally {
             setIsProcessing(false);
         }
-    };
-
-    const playAudioResponse = (audioBase64: string) => {
-        setIsSpeaking(true);
-        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-        audioRef.current = audio;
-
-        audio.onended = () => {
-            setIsSpeaking(false);
-        };
-
-        audio.play().catch((err) => {
-            console.error("Audio playback error:", err);
-            setIsSpeaking(false);
-        });
     };
 
     const clearConversation = () => {

@@ -1,11 +1,11 @@
-import os
+import re
 import json
 import tempfile
 import base64
 import io
 import httpx
 from fastapi import FastAPI, HTTPException, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from gtts import gTTS
 from pydantic import BaseModel
@@ -338,6 +338,120 @@ OUTPUT SCHEMA (JSON):
     except Exception as e:
         print(f"News Error: {e}")
         return []
+
+async def get_sarvam_tts(text: str, lang: str):
+    """Helper to get TTS from Sarvam AI"""
+    if not SARVAM_API_KEY:
+        return ""
+    
+    async with httpx.AsyncClient() as client:
+        tts_payload = {
+            "inputs": [text],
+            "target_language_code": lang,
+            "speaker": "anushka",
+            "model": "bulbul:v2"
+        }
+        headers = {
+            "api-subscription-key": SARVAM_API_KEY,
+            "Content-Type": "application/json"
+        }
+        try:
+            tts_response = await client.post(SARVAM_TTS_URL, headers=headers, json=tts_payload)
+            if tts_response.status_code == 200:
+                return tts_response.json().get("audios", [""])[0]
+        except Exception as e:
+            print(f"TTS Error: {e}")
+    return ""
+
+@app.post("/voice/stream")
+async def voice_stream(request: VoiceChatRequest):
+    """
+    Streaming voice interaction: 
+    Sarvam STT -> Groq Stream -> Sentence-based Sarvam TTS -> Yield chunks
+    """
+    try:
+        if not SARVAM_API_KEY:
+            return JSONResponse({"error": "Sarvam API Key not configured"}, status_code=500)
+
+        # 1. Speech-to-Text
+        audio_content = base64.b64decode(request.audio_base64)
+        async with httpx.AsyncClient() as client:
+            files = {"file": ("audio.webm", audio_content, "audio/webm")}
+            headers = {"api-subscription-key": SARVAM_API_KEY}
+            stt_response = await client.post(
+                SARVAM_STT_URL, headers=headers, files=files, data={"model": "saaras:v3"}
+            )
+            if stt_response.status_code != 200:
+                return JSONResponse({"error": "Speech-to-Text failed"}, status_code=500)
+            
+            stt_data = stt_response.json()
+            detected_text = stt_data.get("transcript", "")
+            detected_lang = stt_data.get("language_code", "en-IN")
+
+        if not detected_text:
+            return JSONResponse({"error": "No speech detected"}, status_code=400)
+
+        async def event_generator():
+            # Initial detection info
+            yield json.dumps({
+                "type": "detection",
+                "text": detected_text,
+                "language": detected_lang
+            }) + "\n"
+
+            # 2. Build context
+            conversation_messages = [
+                {"role": "system", "content": "You are S.A.T.Y.A., a multilingual Indian election assistant. Keep responses very concise (1-2 sentences). Respond in English."}
+            ]
+            for msg in request.conversation_history[-3:]:
+                conversation_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+            conversation_messages.append({"role": "user", "content": f"User asked in {detected_lang}: {detected_text}"})
+
+            # 3. Stream Groq & Buffer Sentences
+            buffer = ""
+            
+            stream = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
+                messages=conversation_messages,
+                stream=True
+            )
+
+            for chunk in stream:
+                content = chunk.choices[0].delta.content or ""
+                buffer += content
+
+                # Sentence detection (period, exclamation, question, or newline)
+                if any(p in buffer for p in [". ", "! ", "? ", "\n"]):
+                    # Find the last punctuation index
+                    match = re.search(r'([.!?\n])\s+', buffer)
+                    if match:
+                        end_idx = match.end()
+                        sentence = buffer[:end_idx].strip()
+                        buffer = buffer[end_idx:]
+
+                        if sentence:
+                            audio = await get_sarvam_tts(sentence, detected_lang)
+                            yield json.dumps({
+                                "type": "chunk",
+                                "text": sentence,
+                                "audio": audio
+                            }) + "\n"
+
+            # Final remaining buffer
+            if buffer.strip():
+                audio = await get_sarvam_tts(buffer.strip(), detected_lang)
+                yield json.dumps({
+                    "type": "chunk",
+                    "text": buffer.strip(),
+                    "audio": audio,
+                    "is_final": True
+                }) + "\n"
+
+        return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+
+    except Exception as e:
+        print(f"Streaming Error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/voice/chat", response_model=VoiceChatResponse)
 async def voice_chat(request: VoiceChatRequest):
