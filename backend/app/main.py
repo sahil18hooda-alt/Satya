@@ -81,6 +81,14 @@ if not GROQ_API_KEY:
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
+# Separate Groq Client for Voice AI
+VOICE_GROQ_API_KEY = os.getenv("VOICE_GROQ_API_KEY")
+if not VOICE_GROQ_API_KEY:
+    print("WARNING: VOICE_GROQ_API_KEY not found, falling back to GROQ_API_KEY")
+    VOICE_GROQ_API_KEY = GROQ_API_KEY
+
+voice_groq_client = Groq(api_key=VOICE_GROQ_API_KEY)
+
 # --- Sarvam AI Configuration (for Voice) ---
 SARVAM_API_KEY = os.getenv("SARVAM_AI_API_KEY")
 SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
@@ -409,8 +417,8 @@ RESPONSE GUIDELINES:
             "content": f"User asked in {detected_lang}: {detected_text}"
         })
         
-        # Generate response with Groq
-        ai_response = groq_client.chat.completions.create(
+        # Generate response with Groq (using dedicated voice client)
+        ai_response = voice_groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=conversation_messages,
             temperature=0.7,
